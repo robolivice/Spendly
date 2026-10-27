@@ -29,9 +29,10 @@ def setup():
     CREATE TABLE IF NOT EXISTS limits(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         profile_id INTEGER NOT NULL,
-        month TEXT NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
         amount REAL NOT NULL,
-        UNIQUE(profile_id, month),
+        UNIQUE(profile_id, start_date, end_date),
         FOREIGN KEY (profile_id) REFERENCES profiles(id)
     )""")
     conn.commit()
@@ -76,9 +77,7 @@ def deleteExpense(pid, eid):
     conn.commit()
     conn.close()
 
-def monthRange(pid, month):
-    start = month + "-01"
-    end = month + "-31"
+def monthRange(pid, start, end):
     conn = connect()
     rows = conn.execute(
         "SELECT id, date, category, amount, description FROM expenses "
@@ -88,27 +87,27 @@ def monthRange(pid, month):
     conn.close()
     return rows
 
-def setLimit(pid, month, amount):
+def setLimit(pid, start, end, amount):
     conn = connect()
     conn.execute("""
-    INSERT INTO limits(profile_id, month, amount) VALUES (?, ?, ?)
-    ON CONFLICT(profile_id, month) DO UPDATE SET amount = excluded.amount
-    """, (pid, month, amount))
+    INSERT INTO limits(profile_id, start_date, end_date, amount) VALUES (?, ?, ?, ?)
+    ON CONFLICT(profile_id, start_date, end_date) DO UPDATE SET amount = excluded.amount
+    """, (pid, start, end, amount))
     conn.commit()
     conn.close()
 
-def endStats(pid, month):
+def endStats(pid, start, end):
     conn = connect()
     row = conn.execute(
-        "SELECT SUM(amount) FROM expenses WHERE profile_id = ? AND date LIKE ?",
-        (pid, month + "%")
+        "SELECT SUM(amount) FROM expenses WHERE profile_id = ? AND date BETWEEN ? AND ?",
+        (pid, start, end)
     ).fetchone()
     spent = row[0]
     if spent is None:
         spent = 0
     row = conn.execute(
-        "SELECT amount FROM limits WHERE profile_id = ? AND month = ?",
-        (pid, month)
+        "SELECT amount FROM limits WHERE profile_id = ? AND start_date = ? AND end_date = ?",
+        (pid, start, end)
     ).fetchone()
     limit = None
     if row:

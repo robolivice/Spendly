@@ -58,7 +58,8 @@ h2 { margin: 0 0 12px; font-size: 1.1rem; }
 }
 .avatar.plus { background: transparent; border: 2px dashed var(--muted); color: var(--muted); }
 
-.month-form { margin-bottom: 16px; }
+.month-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.presets { display: flex; gap: 14px; margin-bottom: 16px; }
 
 .summary {
     display: grid;

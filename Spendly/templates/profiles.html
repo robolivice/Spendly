@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Who's spending?</h1>
+<h1>Profiles</h1>
 
 <div class="profile-grid">
     {% for p in profiles %}
@@ -12,7 +12,7 @@
 
     <form class="card profile-card new" action="{{ url_for('create') }}" method="post">
         <div class="avatar plus">+</div>
-        <input type="text" name="name" placeholder="New profile" required>
+        <input style="width: 110%;" type="text" name="name" placeholder="New profile" required>
         <button type="submit">Create</button>
     </form>
 </div>
