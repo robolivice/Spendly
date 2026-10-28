@@ -2,66 +2,170 @@
 {% block content %}
 <div class="topbar">
     <h1>{{ profile['name'] }}</h1>
-    <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
+    <div class="links">
+        <a class="link" href="{{ url_for('history') }}">History</a>
+        <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
+    </div>
 </div>
 
-<form method="get" class="month-form">
-    <input type="date" name="start" value="{{ start }}" class="date-picker" readonly required>
-    <span class="small">to</span>
-    <input type="date" name="end" value="{{ end }}" class="date-picker" readonly required>
-    <button type="submit">Apply</button>
-</form>
+{% if cycle is none %}
+<div class="card">
+    <h2>Set up your monthly cycle</h2>
+    <p class="small">Choose the dates of your first period. Future months follow the end date's day; a month-end date means future periods end on the last day of each month.</p>
+    <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
+        <label class="field">Starts
+            <input type="date" name="start" value="{{ default_start }}" class="date-picker" readonly required>
+        </label>
+        <label class="field">Ends
+            <input type="date" name="end" value="{{ default_end }}" class="date-picker" readonly required>
+        </label>
+        <label class="field">Monthly limit (optional)
+            <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
+        </label>
+        <button type="submit">Start</button>
+    </form>
+</div>
+{% else %}
+{% macro sortlink(label, key) %}
+<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('dashboard', start=range_start, end=range_end, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">{{ label }}{% if sort == key %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a>
+{% endmacro %}
 
-<div class="presets">
-    {% for p in presets %}
-    <a class="link" href="{{ url_for('dashboard', start=p[1], end=p[2]) }}">{{ p[0] }}</a>
-    {% endfor %}
+<div class="card">
+    <div class="period-nav">
+        <div>
+            {% if older %}<a class="nav-btn" href="{{ url_for('dashboard', period=older) }}">‹ Older</a>{% endif %}
+        </div>
+        <div class="period-head">
+            <div class="period-title">{{ period.label }} {% if period.id is not none and period.is_current %}<span class="badge">Current</span>{% endif %}</div>
+            <div class="small">{{ period.dates }}</div>
+        </div>
+        <div>
+            {% if newer %}<a class="nav-btn" href="{{ url_for('dashboard', period=newer) }}">Newer ›</a>{% endif %}
+            {% if period.id is none or not period.is_current %}<a class="link" href="{{ url_for('dashboard') }}">Current period</a>{% endif %}
+        </div>
+    </div>
+    <form method="get" action="{{ url_for('dashboard') }}" class="period-form">
+        <select name="period" class="auto-submit">
+            {% if period.id is none %}<option selected disabled>Custom range</option>{% endif %}
+            {% for year, group in periods|groupby('year') %}
+            <optgroup label="{{ year }}">
+                {% for p in group %}
+                <option value="{{ p.id }}" {% if p.id == period.id %}selected{% endif %}>{{ p.label }} ({{ p.dates }})</option>
+                {% endfor %}
+            </optgroup>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">Go</button></noscript>
+    </form>
+    <form method="get" action="{{ url_for('dashboard') }}" class="range-form">
+        <input type="date" name="start" value="{{ range_start }}" class="date-picker" readonly required>
+        <span class="small" style="transform: translateY(10px);">to</span>
+        <input type="date" name="end" value="{{ range_end }}" class="date-picker" readonly required>
+        <button type="submit">Apply range</button>
+    </form>
 </div>
 
 <div class="summary">
     <div class="card">
         <span class="label">Spent</span>
-        <span class="value">{{ "%.2f"|format(spent) }}</span>
+        <span class="value">{{ "%.2f"|format(period.spent) }}</span>
     </div>
     <div class="card">
         <span class="label">Limit</span>
         <span class="value">
-            {% if limit is not none %}{{ "%.2f"|format(limit) }}{% else %}Not set{% endif %}
+            {% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}
         </span>
     </div>
     <div class="card">
         <span class="label">Remaining</span>
-        <span class="value {{ status }}-text">
-            {% if remaining is not none %}{{ "%.2f"|format(remaining) }}{% else %}-{% endif %}
+        <span class="value {{ period.status }}-text">
+            {% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}-{% endif %}
         </span>
     </div>
 </div>
 
 <div class="card">
     <div class="progress">
-        <div class="fill {{ status }}" data-width="{{ bar }}"></div>
+        <div class="fill {{ period.status }}" data-width="{{ period.bar }}"></div>
     </div>
-    {% if limit is not none %}
-        <p class="small">{{ "%.0f"|format(percent) }}% of limit used</p>
+    {% if period.id is none %}
+    <p class="small">This is a temporary view; it is not a saved period.</p>
+    {% elif period.limit is not none %}
+    <p class="small">{{ "%.0f"|format(period.percent) }}% of limit used</p>
     {% else %}
-        <p class="small">Set a limit for this month</p>
+    <p class="small">Set a limit for this period</p>
     {% endif %}
-
-    <form action="{{ url_for('limit') }}" method="post" class="inline-form">
-        <input type="hidden" name="start" value="{{ start }}">
-        <input type="hidden" name="end" value="{{ end }}">
-        <input type="number" step="0.01" min="0" name="amount" placeholder="Monthly limit"
-               {% if limit is not none %}value="{{ limit }}"{% endif %} required>
+    {% if period.id is not none %}
+    <form action="{{ url_for('period_limit', period_id=period.id) }}" method="post" class="inline-form">
+        <input type="number" step="0.01" min="0" name="amount" placeholder="Period limit"
+               {% if period.limit is not none %}value="{{ period.limit }}"{% endif %}>
         <button type="submit">Save limit</button>
     </form>
+    <p class="small">Leave blank to clear. The next period inherits the latest saved limit.</p>
+    {% endif %}
 </div>
+
+{% if period.id is none %}
+<div class="card">
+    <h2>{% if save_state == 'update' %}Update this period{% else %}Save this range{% endif %}</h2>
+    {% if save_state == 'blocked' %}
+    <p class="small">This range overlaps {{ overlap_names|join(', ') }}. Choose a range that stays within one month before saving.</p>
+    {% else %}
+    <p class="small">
+        Saves as <strong>{{ save_label }}</strong> ({{ period.dates }}).
+        {% if save_state == 'update' %}Saving will update {{ save_target }}.{% endif %}
+    </p>
+    <form action="{{ url_for('period_save') }}" method="post" class="inline-form">
+        <input type="hidden" name="start" value="{{ range_start }}">
+        <input type="hidden" name="end" value="{{ range_end }}">
+        <input type="hidden" name="mode" value="range">
+        <label class="field">Limit
+            <input type="number" step="0.01" min="0" name="amount" placeholder="No limit"
+                   {% if save_limit is not none %}value="{{ save_limit }}"{% endif %}>
+        </label>
+        <label class="check"><input type="checkbox" name="future" {% if future_default %}checked{% endif %}> Use this end date for future months</label>
+        <button type="submit">{{ 'Update period' if save_state == 'update' else 'Save period' }}</button>
+    </form>
+    <p class="small">New months inherit the latest saved limit.</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if new_start %}
+<details class="card" {% if add_open %}open{% endif %}>
+    <summary>Add a past period</summary>
+    <form action="{{ url_for('period_save') }}" method="post" class="inline-form">
+        <input type="hidden" name="mode" value="past">
+        <label class="field">Starts
+            <input type="date" name="start" value="{{ new_start }}" class="date-picker" readonly required>
+        </label>
+        <label class="field">Ends
+            <input type="date" name="end" value="{{ new_end }}" class="date-picker" readonly required>
+        </label>
+        <label class="field">Limit (optional)
+            <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
+        </label>
+        <button type="submit">Add period</button>
+    </form>
+    <p class="small">The period is named after its end month. If the range overlaps one saved period, that period's dates are updated.</p>
+</details>
+{% endif %}
+
+<details class="card">
+    <summary>Cycle settings</summary>
+    <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
+        <input type="number" name="end_day" min="1" max="31" value="{{ cycle['end_day'] }}" required>
+        <button type="submit">Save</button>
+    </form>
+    <p class="small">The new end day applies to periods created after the current one. Existing periods keep their dates.</p>
+</details>
 
 <div class="card">
     <h2>Add expense</h2>
     <form action="{{ url_for('add') }}" method="post" class="add-form">
-        <input type="hidden" name="start" value="{{ start }}">
-        <input type="hidden" name="end" value="{{ end }}">
-        <input type="date" name="date" value="{{ today }}" class="date-picker" readonly required>
+        <input type="hidden" name="start" value="{{ range_start }}">
+        <input type="hidden" name="end" value="{{ range_end }}">
+        <input type="date" name="date" value="{{ today }}" max="{{ today }}" class="date-picker" readonly required>
         <select name="category">
             <option>Food</option>
             <option>Transport</option>
@@ -76,24 +180,29 @@
 </div>
 
 <div class="card">
-    <h2>Expenses from {{ start }} to {{ end }}</h2>
+    <h2>{{ period.dates }}</h2>
     {% if expenses|length == 0 %}
-        <p class="small">No expenses this month.</p>
+    <p class="small">No expenses in this period.</p>
     {% else %}
     <table>
         <tr>
-            <th>Date</th><th>Category</th><th>Amount</th><th>Description</th><th></th>
+            <th>{{ sortlink('Date', 'date') }}</th>
+            <th>{{ sortlink('Category', 'category') }}</th>
+            <th>{{ sortlink('Amount', 'amount') }}</th>
+            <th>{{ sortlink('Description', 'description') }}</th>
+            <th></th>
         </tr>
         {% for e in expenses %}
         <tr>
             <td>{{ e['date'] }}</td>
             <td><span class="badge">{{ e['category'] }}</span></td>
             <td>{{ "%.2f"|format(e['amount']) }}</td>
-            <td>{{ e['description'] }}</td>
+            <td>{{ e['description'] or '' }}</td>
             <td>
                 <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
-                    <input type="hidden" name="start" value="{{ start }}">
-                    <input type="hidden" name="end" value="{{ end }}">
+                    <input type="hidden" name="start" value="{{ range_start }}">
+                    <input type="hidden" name="end" value="{{ range_end }}">
+                    <input type="hidden" name="period" value="{{ period.id or '' }}">
                     <button type="submit" class="danger">Delete</button>
                 </form>
             </td>
@@ -102,6 +211,7 @@
     </table>
     {% endif %}
 </div>
+{% endif %}
 
 <dialog id="calendar" class="calendar" aria-labelledby="cal-title">
     <div class="cal-head">
@@ -119,7 +229,6 @@
         <button type="button" id="cal-cancel">Cancel</button>
     </div>
 </dialog>
-
 {% endblock %}
 
 {% block scripts %}

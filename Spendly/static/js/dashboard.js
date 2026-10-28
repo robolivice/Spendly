@@ -4,6 +4,20 @@
         fill.style.width = fill.dataset.width + "%";
     }
 
+    document.querySelectorAll("select.auto-submit").forEach(select => {
+        select.onchange = () => select.form.submit();
+    });
+
+    const pageDate = document.querySelector("input[name='date'][max]");
+    if (pageDate) {
+        setInterval(() => {
+            const now = new Date();
+            const pad = n => String(n).padStart(2, "0");
+            const current = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+            if (current !== pageDate.max) location.reload();
+        }, 60000);
+    }
+
     const calendar = document.getElementById("calendar");
     if (!calendar) return;
 

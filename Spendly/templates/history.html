@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="topbar">
+    <h1>{{ profile['name'] }} history</h1>
+    <div class="links">
+        <a class="link" href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
+    </div>
+</div>
+
+{% macro sortlink(label, key) %}
+<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('history', year=year, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">{{ label }}{% if sort == key %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a>
+{% endmacro %}
+
+<div class="card">
+    <form method="get" action="{{ url_for('history') }}" class="period-form">
+        <select name="year" class="auto-submit">
+            <option value="">All years</option>
+            {% for y in years %}
+            <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">Go</button></noscript>
+    </form>
+</div>
+
+<div class="card">
+    {% if periods|length == 0 %}
+    <p class="small">No periods yet.</p>
+    {% else %}
+    <table>
+        <tr>
+            <th>{{ sortlink('Period', 'period') }}</th>
+            <th>Dates</th>
+            <th>{{ sortlink('Spent', 'spent') }}</th>
+            <th>{{ sortlink('Limit', 'limit') }}</th>
+            <th>{{ sortlink('Remaining', 'remaining') }}</th>
+            <th>Status</th>
+        </tr>
+        {% for p in periods %}
+        <tr>
+            <td>
+                <a class="link" href="{{ url_for('dashboard', period=p.id) }}">{{ p.label }}</a>
+                {% if p.is_current %}<span class="badge">Current</span>{% endif %}
+            </td>
+            <td class="small">{{ p.dates }}</td>
+            <td>{{ "%.2f"|format(p.spent) }}</td>
+            <td>{% if p.limit is not none %}{{ "%.2f"|format(p.limit) }}{% else %}Not set{% endif %}</td>
+            <td class="{{ p.status }}-text">{% if p.remaining is not none %}{{ "%.2f"|format(p.remaining) }}{% else %}-{% endif %}</td>
+            <td>
+                {% if p.status == 'over' %}Over
+                {% elif p.status == 'warn' %}Near limit
+                {% elif p.status == 'ok' %}On track
+                {% else %}No limit{% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</div>
+{% endblock %}

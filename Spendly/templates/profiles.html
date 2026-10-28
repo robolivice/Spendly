@@ -4,21 +4,27 @@
 
 <div class="profile-grid">
     {% for p in profiles %}
-    <div class="card profile-card">
-        <a class="profile-link" href="{{ url_for('select', pid=p['id']) }}">
-            <div class="avatar">{{ p['name'][0]|upper }}</div>
-            <div>{{ p['name'] }}</div>
-        </a>
-        <button class="danger" type="button"
-                data-url="{{ url_for('deleteProfile', pid=p['id']) }}"
-                data-name="{{ p['name'] }}">Delete</button>
+    <div class="profile-card">
+        <div class="profile-card__content">
+            <a class="profile-link" href="{{ url_for('select', pid=p['id']) }}">
+                <div class="avatar">{{ p['name'][0]|upper }}</div>
+                <div class="profile-name">{{ p['name'] }}</div>
+            </a>
+            <button class="user-profile user-profile--delete" type="button"
+                    data-url="{{ url_for('deleteProfile', pid=p['id']) }}"
+                    data-name="{{ p['name'] }}">Delete</button>
+        </div>
     </div>
     {% endfor %}
 
-    <form class="card profile-card new" action="{{ url_for('create') }}" method="post">
-        <div class="avatar plus">+</div>
-        <input style="width: 110%;" type="text" name="name" placeholder="New profile" required>
-        <button type="submit">Create</button>
+    <form class="profile-card profile-card--new" action="{{ url_for('create') }}" method="post">
+        <div class="profile-card__content">
+            <div class="profile-card__main">
+                <div class="avatar plus">+</div>
+                <input type="text" name="name" placeholder="New profile" required>
+            </div>
+            <button class="user-profile user-profile--create" type="submit">Create</button>
+        </div>
     </form>
 </div>
 
