@@ -64,6 +64,29 @@ def create():
     return redirect(url_for("dashboard"))
 
 
+@app.route("/profile/rename", methods=["POST"])
+def renameProfile():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    profile = db.getProfile(pid)
+    if profile is None:
+        return redirect(url_for("switch"))
+    target = request.form.get("next", "")
+    if not target.startswith("/") or target.startswith("//"):
+        target = url_for("dashboard")
+    name = request.form.get("name", "").strip()
+    if name == "":
+        flash("Profile name cannot be empty.", "error")
+    elif name == profile["name"]:
+        pass
+    elif db.renameProfile(pid, name):
+        flash("Profile renamed.", "ok")
+    else:
+        flash(f'A profile named "{name}" already exists.', "error")
+    return redirect(target)
+
+
 @app.route("/profile/delete/<int:pid>", methods=["DELETE"])
 def deleteProfile(pid):
     db.deleteProfile(pid)

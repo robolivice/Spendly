@@ -103,6 +103,18 @@ def createProfile(name):
     return pid
 
 
+def renameProfile(pid, name):
+    conn = connect()
+    try:
+        conn.execute("UPDATE profiles SET name = ? WHERE id = ?", (name, pid))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        conn.close()
+
+
 def deleteProfile(pid):
     conn = connect()
     conn.execute("DELETE FROM expenses WHERE profile_id = ?", (pid,))

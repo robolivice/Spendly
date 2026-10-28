@@ -1,4 +1,42 @@
 (() => {
+    const profileTitle = document.getElementById("profile-title");
+    const renameForm = document.getElementById("rename-form");
+    const renameInput = document.getElementById("rename-input");
+
+    if (profileTitle && renameForm && renameInput) {
+        profileTitle.onclick = () => {
+            profileTitle.hidden = true;
+            renameForm.hidden = false;
+            renameInput.focus();
+            renameInput.select();
+        };
+
+        renameInput.oninput = () => {
+            renameInput.setCustomValidity(
+                renameInput.value.trim() ? "" : "Profile name cannot be empty."
+            );
+        };
+
+        renameInput.onkeydown = e => {
+            if (e.key === "Escape") {
+                renameInput.value = profileTitle.textContent.trim();
+                renameForm.hidden = true;
+                profileTitle.hidden = false;
+            }
+        };
+
+        renameInput.onblur = () => {
+            if (!renameForm.hidden) {
+                renameForm.hidden = true;
+                profileTitle.hidden = false;
+            }
+        };
+
+        renameForm.onsubmit = () => {
+            renameInput.value = renameInput.value.trim();
+        };
+    }
+
     const fill = document.querySelector(".fill");
     if (fill) {
         fill.style.width = fill.dataset.width + "%";

@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="topbar">
-    <h1>{{ profile['name'] }}</h1>
+    <div class="profile-title">
+        <h1 id="profile-title" title="Click to rename">{{ profile['name'] }}</h1>
+        <form id="rename-form" class="rename-form" action="{{ url_for('renameProfile') }}" method="post" hidden>
+            <input type="hidden" name="next" value="{{ request.full_path }}">
+            <input type="text" name="name" id="rename-input" value="{{ profile['name'] }}"
+                   maxlength="50" autocomplete="off" required>
+        </form>
+    </div>
     <div class="links">
         <a class="link" href="{{ url_for('history') }}">History</a>
         <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
