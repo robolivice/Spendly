@@ -4,10 +4,15 @@
 
 <div class="profile-grid">
     {% for p in profiles %}
-    <a class="card profile-card" href="{{ url_for('select', pid=p['id']) }}">
-        <div class="avatar">{{ p['name'][0]|upper }}</div>
-        <div>{{ p['name'] }}</div>
-    </a>
+    <div class="card profile-card">
+        <a class="profile-link" href="{{ url_for('select', pid=p['id']) }}">
+            <div class="avatar">{{ p['name'][0]|upper }}</div>
+            <div>{{ p['name'] }}</div>
+        </a>
+        <button class="danger" type="button"
+                data-url="{{ url_for('deleteProfile', pid=p['id']) }}"
+                data-name="{{ p['name'] }}">Delete</button>
+    </div>
     {% endfor %}
 
     <form class="card profile-card new" action="{{ url_for('create') }}" method="post">
@@ -16,4 +21,34 @@
         <button type="submit">Create</button>
     </form>
 </div>
+
+<dialog id="delete-dialog">
+    <h2>Delete profile?</h2>
+    <p id="delete-message" class="small"></p>
+    <div class="dialog-actions">
+        <button type="button" onclick="document.getElementById('delete-dialog').close()">Cancel</button>
+        <button class="danger" type="button" id="delete-confirm">Delete</button>
+    </div>
+</dialog>
+
+<script>
+    const dialog = document.getElementById("delete-dialog");
+    const confirmBtn = document.getElementById("delete-confirm");
+    let deleteUrl = "";
+
+    document.querySelectorAll("[data-url]").forEach(btn => {
+        btn.onclick = () => {
+            deleteUrl = btn.dataset.url;
+            document.getElementById("delete-message").textContent =
+                `Delete "${btn.dataset.name}"? This cannot be undone.`;
+            dialog.showModal();
+        };
+    });
+
+    confirmBtn.onclick = async () => {
+        confirmBtn.disabled = true;
+        await fetch(deleteUrl, { method: "DELETE" });
+        location.reload();
+    };
+</script>
 {% endblock %}

@@ -62,6 +62,14 @@ def createProfile(name):
     conn.close()
     return pid
 
+def deleteProfile(pid):
+    conn = connect()
+    conn.execute("DELETE FROM expenses WHERE profile_id = ?", (pid,))
+    conn.execute("DELETE FROM limits WHERE profile_id = ?", (pid,))
+    conn.execute("DELETE FROM profiles WHERE id = ?", (pid,))
+    conn.commit()
+    conn.close()
+
 def save(pid, exp_date, category, amount, description):
     conn = connect()
     conn.execute(

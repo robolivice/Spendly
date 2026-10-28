@@ -23,6 +23,13 @@ def create():
     session["pid"] = pid
     return redirect(url_for("dashboard"))
 
+@app.route("/profile/delete/<int:pid>", methods=["DELETE"])
+def deleteProfile(pid):
+    db.deleteProfile(pid)
+    if session.get("pid") == pid:
+        session.pop("pid", None)
+    return "", 204
+
 @app.route("/profile/select/<int:pid>")
 def select(pid):
     if db.getProfile(pid) is None:
