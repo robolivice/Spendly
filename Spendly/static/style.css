@@ -79,6 +79,50 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 @keyframes pop {
     from { transform: scale(0.95); opacity: 0; }
 }
+
+.calendar { width: min(340px, 92vw); }
+.cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+.cal-head strong { font-size: 1rem; }
+.cal-head button {
+    background: transparent;
+    color: var(--text);
+    padding: 2px 10px;
+    font-size: 1.2rem;
+}
+.cal-head button:hover { background: #2a2e3d; }
+.cal-weekdays, .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+.cal-weekdays {
+    color: var(--muted);
+    font-size: 0.75rem;
+    margin-bottom: 6px;
+}
+.cal-day {
+    background: transparent;
+    color: var(--text);
+    padding: 0;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    font-weight: 500;
+}
+.cal-day:hover { background: #2a2e3d; }
+.cal-day.other { color: var(--muted); }
+.cal-day.today { color: var(--accent); border: 1px solid var(--accent); }
+.cal-day.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+#cal-today { margin-right: auto; }
+
+.date-picker { cursor: pointer; }
+.date-picker::-webkit-calendar-picker-indicator { display: none; }
+.date-picker:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .avatar {
     width: 64px; height: 64px;
     border-radius: 50%;

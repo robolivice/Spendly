@@ -26,29 +26,13 @@
     <h2>Delete profile?</h2>
     <p id="delete-message" class="small"></p>
     <div class="dialog-actions">
-        <button type="button" onclick="document.getElementById('delete-dialog').close()">Cancel</button>
+        <button type="button" id="delete-cancel">Cancel</button>
         <button class="danger" type="button" id="delete-confirm">Delete</button>
     </div>
 </dialog>
 
-<script>
-    const dialog = document.getElementById("delete-dialog");
-    const confirmBtn = document.getElementById("delete-confirm");
-    let deleteUrl = "";
+{% endblock %}
 
-    document.querySelectorAll("[data-url]").forEach(btn => {
-        btn.onclick = () => {
-            deleteUrl = btn.dataset.url;
-            document.getElementById("delete-message").textContent =
-                `Delete "${btn.dataset.name}"? This cannot be undone.`;
-            dialog.showModal();
-        };
-    });
-
-    confirmBtn.onclick = async () => {
-        confirmBtn.disabled = true;
-        await fetch(deleteUrl, { method: "DELETE" });
-        location.reload();
-    };
-</script>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/profiles.js') }}" defer></script>
 {% endblock %}
