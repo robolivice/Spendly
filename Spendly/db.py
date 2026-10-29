@@ -327,6 +327,25 @@ def savePeriod(pid, start, end, amount):
     return period_id, action
 
 
+def updatePeriodRange(pid, period_id, start, end):
+    conn = connect()
+    overlap = conn.execute("""
+    SELECT 1 FROM periods
+    WHERE profile_id = ? AND id != ? AND start_date <= ? AND end_date >= ?
+    LIMIT 1
+    """, (pid, period_id, end, start)).fetchone()
+    if overlap:
+        conn.close()
+        return False
+    conn.execute("""
+    UPDATE periods SET start_date = ?, end_date = ?
+    WHERE id = ? AND profile_id = ?
+    """, (start, end, period_id, pid))
+    conn.commit()
+    conn.close()
+    return True
+
+
 def setPeriodLimit(pid, period_id, amount):
     conn = connect()
     conn.execute("UPDATE periods SET limit_amount = ? WHERE id = ? AND profile_id = ?", (amount, period_id, pid))

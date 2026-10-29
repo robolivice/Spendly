@@ -11,6 +11,7 @@
     </div>
     <div class="links">
         <a class="link" href="{{ url_for('history') }}">History</a>
+        <a class="link" href="{{ url_for('period_settings') }}">Period settings</a>
         <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
     </div>
 </div>
@@ -138,35 +139,6 @@
 </div>
 {% endif %}
 
-{% if new_start %}
-<details class="card" {% if add_open %}open{% endif %}>
-    <summary>Add a past period</summary>
-    <form action="{{ url_for('period_save') }}" method="post" class="inline-form">
-        <input type="hidden" name="mode" value="past">
-        <label class="field">Starts
-            <input type="date" name="start" value="{{ new_start }}" class="date-picker" readonly required>
-        </label>
-        <label class="field">Ends
-            <input type="date" name="end" value="{{ new_end }}" class="date-picker" readonly required>
-        </label>
-        <label class="field">Limit (optional)
-            <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
-        </label>
-        <button type="submit">Add period</button>
-    </form>
-    <p class="small">The period is named after its end month. If the range overlaps one saved period, that period's dates are updated.</p>
-</details>
-{% endif %}
-
-<details class="card">
-    <summary>Cycle settings</summary>
-    <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
-        <input type="number" name="end_day" min="1" max="31" value="{{ cycle['end_day'] }}" required>
-        <button type="submit">Save</button>
-    </form>
-    <p class="small">The new end day applies to periods created after the current one. Existing periods keep their dates.</p>
-</details>
-
 <div class="card">
     <h2>Add expense</h2>
     <form action="{{ url_for('add') }}" method="post" class="add-form">
@@ -220,22 +192,6 @@
 </div>
 {% endif %}
 
-<dialog id="calendar" class="calendar" aria-labelledby="cal-title">
-    <div class="cal-head">
-        <button type="button" id="cal-prev" aria-label="Previous month">‹</button>
-        <strong id="cal-title"></strong>
-        <button type="button" id="cal-next" aria-label="Next month">›</button>
-    </div>
-    <div class="cal-weekdays">
-        <span>Su</span><span>Mo</span><span>Tu</span><span>We</span>
-        <span>Th</span><span>Fr</span><span>Sa</span>
-    </div>
-    <div class="cal-grid" id="cal-grid"></div>
-    <div class="dialog-actions">
-        <button type="button" id="cal-today">Today</button>
-        <button type="button" id="cal-cancel">Cancel</button>
-    </div>
-</dialog>
 {% endblock %}
 
 {% block scripts %}

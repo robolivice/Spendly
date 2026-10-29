@@ -46,6 +46,13 @@ def make_period(row, today, spent=0):
     }
 
 
+def safe_next(default):
+    target = request.form.get("next", "")
+    if target.startswith("/") and not target.startswith("//"):
+        return target
+    return default
+
+
 @app.route("/")
 def index():
     profiles = db.getProfiles()
@@ -217,6 +224,41 @@ def dashboard():
     if direction not in ("asc", "desc"):
         direction = "desc"
     expenses = db.getPeriodExpenses(pid, range_start, range_end, sort, direction)
+    return render_template(
+        "dashboard.html", profile=profile, cycle=cycle, periods=views, period=period,
+        older=older, newer=newer, expenses=expenses, sort=sort, direction=direction,
+        range_start=range_start, range_end=range_end, today=today.isoformat(),
+        save_state=save_state, save_limit=save_limit, save_target=save_target,
+        save_label=save_label, overlap_names=overlap_names, future_default=future_default,
+    )
+
+
+@app.route("/period/settings")
+def period_settings():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    profile = db.getProfile(pid)
+    if profile is None:
+        return redirect(url_for("switch"))
+    cycle = db.getCycle(pid)
+    if cycle is None:
+        flash("Set up your monthly cycle first.", "error")
+        return redirect(url_for("dashboard"))
+    today = date.today()
+    db.ensurePeriods(pid, today)
+    rows = db.getPeriods(pid)
+    views = [make_period(row, today) for row in rows]
+    selected_id = request.args.get("period", type=int)
+    period = next((view for view in views if view["id"] == selected_id), None)
+    if period is None:
+        current = db.getPeriodContaining(pid, today.isoformat())
+        period = next(
+            (view for view in views if current is not None and view["id"] == current["id"]),
+            None,
+        )
+    if period is None and views:
+        period = views[0]
     new_start = None
     new_end = None
     if rows:
@@ -226,12 +268,8 @@ def dashboard():
         new_start = previous_start.isoformat()
         new_end = previous_end.isoformat()
     return render_template(
-        "dashboard.html", profile=profile, cycle=cycle, periods=views, period=period,
-        older=older, newer=newer, expenses=expenses, sort=sort, direction=direction,
-        range_start=range_start, range_end=range_end, today=today.isoformat(),
-        save_state=save_state, save_limit=save_limit, save_target=save_target,
-        save_label=save_label, overlap_names=overlap_names, future_default=future_default,
-        new_start=new_start, new_end=new_end, add_open=request.args.get("add") == "1",
+        "period_settings.html", profile=profile, cycle=cycle, periods=views,
+        period=period, new_start=new_start, new_end=new_end
     )
 
 
@@ -268,18 +306,19 @@ def cycle():
     pid = session.get("pid")
     if pid is None:
         return redirect(url_for("index"))
+    target = safe_next(url_for("dashboard"))
     if db.getCycle(pid):
         try:
             end_day = int(request.form["end_day"])
         except (KeyError, ValueError):
             flash("Choose an end day between 1 and 31.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         if end_day < 1 or end_day > 31:
             flash("Choose an end day between 1 and 31.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         db.setCycleDay(pid, end_day)
         flash("Cycle end day saved. It applies from the next period.", "ok")
-        return redirect(url_for("dashboard"))
+        return redirect(target)
     raw_start = request.form.get("start")
     raw_end = request.form.get("end")
     if raw_start and raw_end:
@@ -288,13 +327,13 @@ def cycle():
             end_date = date.fromisoformat(raw_end)
         except ValueError:
             flash("Choose valid start and end dates.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         if start_date > end_date:
             flash("The start date must be on or before the end date.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         if start_date > date.today():
             flash("The first period cannot start in the future.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         raw = request.form.get("amount", "").strip()
         amount = None
         if raw:
@@ -302,22 +341,22 @@ def cycle():
                 amount = float(raw)
             except ValueError:
                 flash("Enter a valid limit.", "error")
-                return redirect(url_for("dashboard"))
+                return redirect(target)
             if amount < 0:
                 flash("The limit cannot be negative.", "error")
-                return redirect(url_for("dashboard"))
+                return redirect(target)
         db.setupCycle(pid, cycles.end_day_for(end_date), amount, start=start_date, end=end_date)
         db.ensurePeriods(pid)
         flash("Cycle set up.", "ok")
-        return redirect(url_for("dashboard"))
+        return redirect(target)
     try:
         end_day = int(request.form["end_day"])
     except (KeyError, ValueError):
         flash("Choose an end day between 1 and 31.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(target)
     if end_day < 1 or end_day > 31:
         flash("Choose an end day between 1 and 31.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(target)
     raw = request.form.get("amount", "").strip()
     amount = None
     if raw:
@@ -325,12 +364,12 @@ def cycle():
             amount = float(raw)
         except ValueError:
             flash("Enter a valid limit.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
         if amount < 0:
             flash("The limit cannot be negative.", "error")
-            return redirect(url_for("dashboard"))
+            return redirect(target)
     db.setupCycle(pid, end_day, amount, apply_history=request.form.get("apply_history") == "on")
-    return redirect(url_for("dashboard"))
+    return redirect(target)
 
 
 @app.route("/period/save", methods=["POST"])
@@ -345,10 +384,12 @@ def period_save():
         end_date = date.fromisoformat(raw_end)
     except ValueError:
         flash("Choose valid start and end dates.", "error")
-        return redirect(url_for("dashboard"))
+        return redirect(safe_next(url_for("dashboard")))
     if start_date > end_date:
         flash("The start date must be on or before the end date.", "error")
-        return redirect(url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat()))
+        return redirect(safe_next(
+            url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat())
+        ))
     raw = request.form.get("amount", "").strip()
     amount = None
     if raw:
@@ -356,23 +397,27 @@ def period_save():
             amount = float(raw)
         except ValueError:
             flash("Enter a valid limit.", "error")
-            return redirect(url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat()))
+            return redirect(safe_next(
+                url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat())
+            ))
         if amount < 0:
             flash("The limit cannot be negative.", "error")
-            return redirect(url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat()))
+            return redirect(safe_next(
+                url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat())
+            ))
     period_id, action = db.savePeriod(
         pid, start_date.isoformat(), end_date.isoformat(), amount
     )
     if period_id is None:
         flash("That range overlaps more than one saved period. Choose a range within one month.", "error")
-        return redirect(url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat()))
+        return redirect(safe_next(
+            url_for("dashboard", start=start_date.isoformat(), end=end_date.isoformat())
+        ))
     if request.form.get("future") == "on":
         db.setCycleDay(pid, cycles.end_day_for(end_date))
     label = cycles.label(end_date)
     flash(f"{label} {'updated' if action == 'updated' else 'added'}.", "ok")
-    if request.form.get("mode") == "past":
-        return redirect(url_for("dashboard", period=period_id, add=1))
-    return redirect(url_for("dashboard", period=period_id))
+    return redirect(safe_next(url_for("dashboard", period=period_id)))
 
 
 @app.route("/period/<int:period_id>/limit", methods=["POST"])
@@ -395,6 +440,33 @@ def period_limit(period_id):
             return redirect(url_for("dashboard", period=period_id))
     db.setPeriodLimit(pid, period_id, amount)
     return redirect(url_for("dashboard", period=period_id))
+
+
+@app.route("/period/<int:period_id>/range", methods=["POST"])
+def period_range(period_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("dashboard", period=period_id))
+    if db.getPeriod(pid, period_id) is None:
+        flash("Period not found.", "error")
+        return redirect(target)
+    raw_start = request.form.get("start", "").strip()
+    raw_end = request.form.get("end", "").strip()
+    try:
+        start_date = date.fromisoformat(raw_start)
+        end_date = date.fromisoformat(raw_end)
+    except ValueError:
+        flash("Choose valid start and end dates.", "error")
+        return redirect(target)
+    if start_date > end_date:
+        flash("The start date must be on or before the end date.", "error")
+        return redirect(target)
+    if db.updatePeriodRange(pid, period_id, start_date.isoformat(), end_date.isoformat()):
+        flash("Period dates updated.", "ok")
+    else:
+        flash("Those dates overlap another saved period.", "error")
+    return redirect(target)
 
 
 @app.route("/expense/add", methods=["POST"])
