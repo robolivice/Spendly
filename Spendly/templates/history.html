@@ -1,62 +1,103 @@
 {% extends "base.html" %}
+{% block title %}{{ profile['name'] }} history · Spendly{% endblock %}
+
 {% block content %}
-<div class="topbar">
-    <h1>{{ profile['name'] }} history</h1>
-    <div class="links">
-        <a class="link" href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a class="link" href="{{ url_for('period_settings') }}">Period settings</a>
-        <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
-    </div>
-</div>
+{% macro status_label(status) -%}
+{% if status == 'over' %}Over limit{% elif status == 'warn' %}Near limit{% elif status == 'ok' %}On track{% else %}No limit{% endif %}
+{%- endmacro %}
 
 {% macro sortlink(label, key) %}
-<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('history', year=year, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">{{ label }}{% if sort == key %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a>
+<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('history', year=year, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">
+    {{ label }}{% if sort == key %} <span aria-hidden="true">{{ '▲' if direction == 'asc' else '▼' }}</span>{% endif %}
+</a>
 {% endmacro %}
 
-<div class="card">
-    <form method="get" action="{{ url_for('history') }}" class="period-form">
-        <select name="year" class="auto-submit">
-            <option value="">All years</option>
-            {% for y in years %}
-            <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
-            {% endfor %}
-        </select>
-        <noscript><button type="submit">Go</button></noscript>
-    </form>
-</div>
+<header class="page-head">
+    <div>
+        <p class="eyebrow">History</p>
+        <h1>{{ profile['name'] }} history</h1>
+        <p class="page-sub">Review saved periods and see how each budget finished.</p>
+    </div>
+    <div class="page-actions">
+        <span class="badge">{{ periods|length }} {{ 'period' if periods|length == 1 else 'periods' }}</span>
+    </div>
+</header>
 
-<div class="card">
+<section class="summary-row" aria-label="History summary">
+    <article class="card stat-card">
+        <span class="stat-label">Saved periods</span>
+        <span class="stat-value">{{ summary['count'] }}</span>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Total spent</span>
+        <span class="stat-value">{{ "%.2f"|format(summary['spent']) }}</span>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Over / near limit</span>
+        <span class="stat-value">{{ summary['over'] }} <span class="stat-divider">/</span> {{ summary['near'] }}</span>
+    </article>
+</section>
+
+<article class="card history-card">
+    <div class="card-head">
+        <div>
+            <h2>Saved periods</h2>
+            <span class="muted">Open a period to see its expenses.</span>
+        </div>
+        <form method="get" action="{{ url_for('history') }}" class="year-form">
+            <label class="sr-only" for="year-select">Filter by year</label>
+            <select id="year-select" name="year" class="auto-submit">
+                <option value="">All years</option>
+                {% for y in years %}
+                <option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+            <noscript><button class="btn btn-ghost btn-sm" type="submit">Go</button></noscript>
+        </form>
+    </div>
+
     {% if periods|length == 0 %}
-    <p class="small">No periods yet.</p>
+    <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">0</span>
+        <strong>No periods yet</strong>
+        <p>Once you save a period, it will show up here.</p>
+    </div>
     {% else %}
-    <table>
-        <tr>
-            <th>{{ sortlink('Period', 'period') }}</th>
-            <th>Dates</th>
-            <th>{{ sortlink('Spent', 'spent') }}</th>
-            <th>{{ sortlink('Limit', 'limit') }}</th>
-            <th>{{ sortlink('Remaining', 'remaining') }}</th>
-            <th>Status</th>
-        </tr>
-        {% for p in periods %}
-        <tr>
-            <td>
-                <a class="link" href="{{ url_for('dashboard', period=p.id) }}">{{ p.label }}</a>
-                {% if p.is_current %}<span class="badge">Current</span>{% endif %}
-            </td>
-            <td class="small">{{ p.dates }}</td>
-            <td>{{ "%.2f"|format(p.spent) }}</td>
-            <td>{% if p.limit is not none %}{{ "%.2f"|format(p.limit) }}{% else %}Not set{% endif %}</td>
-            <td class="{{ p.status }}-text">{% if p.remaining is not none %}{{ "%.2f"|format(p.remaining) }}{% else %}-{% endif %}</td>
-            <td>
-                {% if p.status == 'over' %}Over
-                {% elif p.status == 'warn' %}Near limit
-                {% elif p.status == 'ok' %}On track
-                {% else %}No limit{% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="table-wrap">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>{{ sortlink('Period', 'period') }}</th>
+                    <th>Dates</th>
+                    <th>{{ sortlink('Spent', 'spent') }}</th>
+                    <th>{{ sortlink('Limit', 'limit') }}</th>
+                    <th>{{ sortlink('Remaining', 'remaining') }}</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in periods %}
+                <tr>
+                    <td>
+                        <a class="link" href="{{ url_for('dashboard', period=p.id) }}">{{ p.label }}</a>
+                        {% if p.is_current %}<span class="badge badge-current">Current</span>{% endif %}
+                    </td>
+                    <td class="small nowrap">{{ p.dates }}</td>
+                    <td class="amount">{{ "%.2f"|format(p.spent) }}</td>
+                    <td class="amount">{% if p.limit is not none %}{{ "%.2f"|format(p.limit) }}{% else %}Not set{% endif %}</td>
+                    <td class="amount {% if p.remaining is not none %}{{ p.status }}-text{% endif %}">
+                        {% if p.remaining is not none %}{{ "%.2f"|format(p.remaining) }}{% else %}—{% endif %}
+                    </td>
+                    <td><span class="status-pill status-{{ p.status }}">{{ status_label(p.status) }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% endif %}
-</div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 {% endblock %}

@@ -1,70 +1,131 @@
 {% extends "base.html" %}
+{% block title %}Period settings · Spendly{% endblock %}
+
 {% block content %}
-<div class="topbar">
-    <h1>Period settings</h1>
-    <div class="links">
-        <a class="link" href="{{ url_for('dashboard') }}">Dashboard</a>
-        <a class="link" href="{{ url_for('history') }}">History</a>
-        <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
+<header class="page-head">
+    <div>
+        <p class="eyebrow">Settings</p>
+        <h1>Period settings</h1>
+        <p class="page-sub">Edit saved periods, add a past month, and choose how Spendly looks.</p>
     </div>
-</div>
+    <div class="page-actions">
+        <span class="badge">{{ periods|length }} {{ 'period' if periods|length == 1 else 'periods' }}</span>
+    </div>
+</header>
 
-{% if period %}
-<div class="card">
-    <h2>Edit period dates</h2>
-    <form method="get" action="{{ url_for('period_settings') }}" class="period-form">
-        <select name="period" class="auto-submit">
-            {% for year, group in periods|groupby('year') %}
-            <optgroup label="{{ year }}">
-                {% for p in group %}
-                <option value="{{ p.id }}" {% if p.id == period.id %}selected{% endif %}>{{ p.label }} ({{ p.dates }})</option>
+<section class="settings-grid">
+    {% if period %}
+    <article class="card settings-card span-2">
+        <div class="card-head">
+            <div>
+                <h2>Edit period dates</h2>
+                <span class="muted">Changes apply only to this saved period.</span>
+            </div>
+            <span class="badge">{{ period.label }}</span>
+        </div>
+        <form method="get" action="{{ url_for('period_settings') }}" class="period-form">
+            <label class="sr-only" for="settings-period-select">Choose period</label>
+            <select id="settings-period-select" name="period" class="auto-submit">
+                {% for year, group in periods|groupby('year') %}
+                <optgroup label="{{ year }}">
+                    {% for p in group %}
+                    <option value="{{ p.id }}" {% if p.id == period.id %}selected{% endif %}>{{ p.label }} ({{ p.dates }})</option>
+                    {% endfor %}
+                </optgroup>
                 {% endfor %}
-            </optgroup>
-            {% endfor %}
-        </select>
-        <noscript><button type="submit">Go</button></noscript>
-    </form>
-    <form action="{{ url_for('period_range', period_id=period.id) }}" method="post" class="range-form">
-        <input type="hidden" name="next" value="{{ url_for('period_settings', period=period.id) }}">
-        <input type="date" name="start" value="{{ period.start_date }}" class="date-picker" readonly required>
-        <span class="small" style="transform: translateY(10px);">to</span>
-        <input type="date" name="end" value="{{ period.end_date }}" class="date-picker" readonly required>
-        <button type="submit">Save dates</button>
-    </form>
-    <p class="small">This changes only this saved period's range. It can't overlap another saved period.</p>
-</div>
-{% endif %}
+            </select>
+            <noscript><button class="btn btn-ghost" type="submit">Go</button></noscript>
+        </form>
+        <form action="{{ url_for('period_range', period_id=period.id) }}" method="post" class="range-form">
+            <input type="hidden" name="next" value="{{ url_for('period_settings', period=period.id) }}">
+            <label class="field">Starts
+                <input type="date" name="start" value="{{ period.start_date }}" class="date-picker" readonly required>
+            </label>
+            <span class="range-sep" aria-hidden="true">to</span>
+            <label class="field">Ends
+                <input type="date" name="end" value="{{ period.end_date }}" class="date-picker" readonly required>
+            </label>
+            <button class="btn btn-primary" type="submit">Save dates</button>
+        </form>
+        <p class="small">It can't overlap another saved period.</p>
+    </article>
+    {% endif %}
 
-{% if new_start %}
-<div class="card">
-    <h2>Add a past period</h2>
-    <form action="{{ url_for('period_save') }}" method="post" class="inline-form">
-        <input type="hidden" name="mode" value="past">
-        <input type="hidden" name="next" value="{{ url_for('period_settings') }}">
-        <label class="field">Starts
-            <input type="date" name="start" value="{{ new_start }}" class="date-picker" readonly required>
-        </label>
-        <label class="field">Ends
-            <input type="date" name="end" value="{{ new_end }}" class="date-picker" readonly required>
-        </label>
-        <label class="field">Limit (optional)
-            <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
-        </label>
-        <button type="submit">Add period</button>
-    </form>
-    <p class="small">The period is named after its end month. If the range overlaps one saved period, that period's dates are updated.</p>
-</div>
-{% endif %}
+    {% if new_start %}
+    <article class="card settings-card">
+        <div class="card-head">
+            <div>
+                <h2>Add a past period</h2>
+                <span class="muted">Fill in a month you missed.</span>
+            </div>
+        </div>
+        <form action="{{ url_for('period_save') }}" method="post" class="inline-form">
+            <input type="hidden" name="mode" value="past">
+            <input type="hidden" name="next" value="{{ url_for('period_settings') }}">
+            <label class="field">Starts
+                <input type="date" name="start" value="{{ new_start }}" class="date-picker" readonly required>
+            </label>
+            <label class="field">Ends
+                <input type="date" name="end" value="{{ new_end }}" class="date-picker" readonly required>
+            </label>
+            <label class="field field-grow">Limit (optional)
+                <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
+            </label>
+            <button class="btn btn-primary" type="submit">Add period</button>
+        </form>
+        <p class="small">The period is named after its end month. If the range overlaps one saved period, that period's dates are updated.</p>
+    </article>
+    {% endif %}
 
-<div class="card">
-    <h2>Cycle settings</h2>
-    <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
-        <input type="hidden" name="next" value="{{ url_for('period_settings') }}">
-        <input type="number" name="end_day" min="1" max="31" value="{{ cycle['end_day'] }}" required>
-        <button type="submit">Save</button>
-    </form>
-    <p class="small">The new end day applies to periods created after the current one. Existing periods keep their dates.</p>
-</div>
+    <article class="card settings-card">
+        <div class="card-head">
+            <div>
+                <h2>Cycle settings</h2>
+                <span class="muted">Choose the day your budget resets.</span>
+            </div>
+        </div>
+        <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
+            <input type="hidden" name="next" value="{{ url_for('period_settings') }}">
+            <label class="field">Cycle end day
+                <input type="number" name="end_day" min="1" max="31" value="{{ cycle['end_day'] }}" required>
+            </label>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+        <p class="small">The new end day applies to periods created after the current one. Existing periods keep their dates.</p>
+    </article>
+
+    <article class="card settings-card span-2 appearance-card">
+        <div class="card-head">
+            <div>
+                <h2>Appearance</h2>
+                <span class="muted">Pick a look. Your choice is saved in this browser.</span>
+            </div>
+            <span class="badge">4 themes</span>
+        </div>
+        <div class="theme-grid" role="radiogroup" aria-label="Theme">
+            <label class="theme-option">
+                <input type="radio" name="theme-choice" value="fintech">
+                <span class="theme-swatch theme-swatch--fintech" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>Dark Fintech</strong><small>Layered ink surfaces and indigo accents.</small></span>
+            </label>
+            <label class="theme-option">
+                <input type="radio" name="theme-choice" value="cockpit">
+                <span class="theme-swatch theme-swatch--cockpit" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>Budget Cockpit</strong><small>A sidebar cockpit with a dense telemetry grid.</small></span>
+            </label>
+            <label class="theme-option">
+                <input type="radio" name="theme-choice" value="saas">
+                <span class="theme-swatch theme-swatch--saas" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>Light SaaS</strong><small>White cards, soft shadows, and airy spacing.</small></span>
+            </label>
+            <label class="theme-option">
+                <input type="radio" name="theme-choice" value="glass">
+                <span class="theme-swatch theme-swatch--glass" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>Neon Glass</strong><small>Frosted panels with violet and cyan glow.</small></span>
+            </label>
+        </div>
+    </article>
+</section>
 {% endblock %}
 
 {% block scripts %}

@@ -1,42 +1,60 @@
 {% extends "base.html" %}
+{% block title %}Profiles · Spendly{% endblock %}
+
 {% block content %}
-<h1>Profiles</h1>
+<header class="page-head">
+    <div>
+        <p class="eyebrow">Profiles</p>
+        <h1>Who's budgeting?</h1>
+        <p class="page-sub">
+            {% if profiles %}Choose a profile to open its dashboard, or create a new one.{% else %}Create your first profile to start tracking expenses.{% endif %}
+        </p>
+    </div>
+    <div class="page-actions">
+        <span class="badge">{{ profiles|length }} {{ 'profile' if profiles|length == 1 else 'profiles' }}</span>
+    </div>
+</header>
 
 <div class="profile-grid">
     {% for p in profiles %}
-    <div class="profile-card">
+    <article class="profile-card{% if active_pid == p['id'] %} is-active{% endif %}">
         <div class="profile-card__content">
             <a class="profile-link" href="{{ url_for('select', pid=p['id']) }}">
-                <div class="avatar">{{ p['name'][0]|upper }}</div>
-                <div class="profile-name">{{ p['name'] }}</div>
+                <span class="avatar" aria-hidden="true">{{ p['name'][0]|upper }}</span>
+                <span class="profile-name">{{ p['name'] }}</span>
+                {% if active_pid == p['id'] %}
+                <span class="badge badge-current">Current profile</span>
+                {% else %}
+                <span class="profile-hint">Open dashboard <span aria-hidden="true">→</span></span>
+                {% endif %}
             </a>
-            <button class="user-profile user-profile--delete" type="button"
+            <button class="btn btn-danger btn-sm profile-delete" type="button"
                     data-url="{{ url_for('deleteProfile', pid=p['id']) }}"
                     data-name="{{ p['name'] }}">Delete</button>
         </div>
-    </div>
+    </article>
     {% endfor %}
 
     <form class="profile-card profile-card--new" action="{{ url_for('create') }}" method="post">
         <div class="profile-card__content">
             <div class="profile-card__main">
-                <div class="avatar plus">+</div>
-                <input type="text" name="name" placeholder="New profile" required>
+                <div class="avatar plus" aria-hidden="true">+</div>
+                <label class="sr-only" for="new-profile-name">New profile name</label>
+                <input id="new-profile-name" type="text" name="name" placeholder="New profile" maxlength="50" autocomplete="off" required>
             </div>
-            <button class="user-profile user-profile--create" type="submit">Create</button>
+            <button class="btn btn-primary" type="submit">Create profile</button>
         </div>
     </form>
 </div>
 
-<dialog id="delete-dialog">
-    <h2>Delete profile?</h2>
+<dialog id="delete-dialog" aria-labelledby="delete-title">
+    <h2 id="delete-title">Delete profile?</h2>
     <p id="delete-message" class="small"></p>
     <div class="dialog-actions">
-        <button type="button" id="delete-cancel">Cancel</button>
-        <button class="danger" type="button" id="delete-confirm">Delete</button>
+        <button class="btn btn-ghost" type="button" id="delete-cancel">Cancel</button>
+        <button class="btn btn-danger" type="button" id="delete-confirm">Delete</button>
     </div>
 </dialog>
-
 {% endblock %}
 
 {% block scripts %}

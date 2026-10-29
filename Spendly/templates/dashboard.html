@@ -1,26 +1,53 @@
 {% extends "base.html" %}
+{% block title %}{% if profile %}{{ profile['name'] }} · {% endif %}Dashboard · Spendly{% endblock %}
+
 {% block content %}
-<div class="topbar">
-    <div class="profile-title">
-        <h1 id="profile-title" title="Click to rename">{{ profile['name'] }}</h1>
-        <form id="rename-form" class="rename-form" action="{{ url_for('renameProfile') }}" method="post" hidden>
-            <input type="hidden" name="next" value="{{ request.full_path }}">
-            <input type="text" name="name" id="rename-input" value="{{ profile['name'] }}"
-                   maxlength="50" autocomplete="off" required>
-        </form>
+{% macro status_label(status) -%}
+{% if status == 'over' %}Over limit{% elif status == 'warn' %}Near limit{% elif status == 'ok' %}On track{% else %}No limit{% endif %}
+{%- endmacro %}
+
+{% macro sortlink(label, key) %}
+<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('dashboard', start=range_start, end=range_end, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">
+    {{ label }}{% if sort == key %} <span aria-hidden="true">{{ '▲' if direction == 'asc' else '▼' }}</span>{% endif %}
+</a>
+{% endmacro %}
+
+<header class="page-head">
+    <div>
+        <p class="eyebrow">Dashboard</p>
+        <div class="profile-title">
+            <h1 id="profile-title" title="Click to rename">{{ profile['name'] }}</h1>
+            <form id="rename-form" class="rename-form" action="{{ url_for('renameProfile') }}" method="post" hidden>
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <label class="sr-only" for="rename-input">Profile name</label>
+                <input type="text" name="name" id="rename-input" value="{{ profile['name'] }}"
+                       maxlength="50" autocomplete="off" required>
+            </form>
+        </div>
+        <p class="page-sub">
+            {% if period %}
+                {{ period.dates }}{% if period.is_current %} · Current period{% endif %}
+            {% else %}
+                Set up your first budget cycle to start tracking.
+            {% endif %}
+        </p>
     </div>
-    <div class="links">
-        <a class="link" href="{{ url_for('history') }}">History</a>
-        <a class="link" href="{{ url_for('period_settings') }}">Period settings</a>
-        <a class="link" href="{{ url_for('switch') }}">Back to Profiles</a>
+    <div class="page-actions">
+        {% if period and period.id is not none %}
+        <span class="status-pill status-{{ period.status }}">{{ status_label(period.status) }}</span>
+        {% endif %}
     </div>
-</div>
+</header>
 
 {% if cycle is none %}
-<div class="card">
-    <h2>Set up your monthly cycle</h2>
-    <p class="small">Choose the dates of your first period. Future months follow the end date's day; a month-end date means future periods end on the last day of each month.</p>
-    <form action="{{ url_for('cycle') }}" method="post" class="inline-form">
+<article class="card setup-card">
+    <div class="card-head">
+        <div>
+            <h2>Set up your monthly cycle</h2>
+            <p class="small">Choose the dates of your first period. Future months follow the end date's day; a month-end date means future periods end on the last day of each month.</p>
+        </div>
+    </div>
+    <form action="{{ url_for('cycle') }}" method="post" class="inline-form setup-form">
         <label class="field">Starts
             <input type="date" name="start" value="{{ default_start }}" class="date-picker" readonly required>
         </label>
@@ -30,92 +57,61 @@
         <label class="field">Monthly limit (optional)
             <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
         </label>
-        <button type="submit">Start</button>
+        <button class="btn btn-primary" type="submit">Start tracking</button>
     </form>
-</div>
+</article>
 {% else %}
-{% macro sortlink(label, key) %}
-<a class="sort-link{% if sort == key %} active{% endif %}" href="{{ url_for('dashboard', start=range_start, end=range_end, sort=key, dir=('asc' if sort != key or direction == 'desc' else 'desc')) }}">{{ label }}{% if sort == key %} {{ '▲' if direction == 'asc' else '▼' }}{% endif %}</a>
-{% endmacro %}
 
-<div class="card">
+<section class="card period-bar" aria-label="Period controls">
     <div class="period-nav">
-        <div>
-            {% if older %}<a class="nav-btn" href="{{ url_for('dashboard', period=older) }}">‹ Older</a>{% endif %}
+        <div class="period-side">
+            {% if older %}<a class="nav-btn" href="{{ url_for('dashboard', period=older) }}">‹ Older</a>{% else %}<span class="nav-btn nav-btn-disabled" aria-hidden="true">‹ Older</span>{% endif %}
         </div>
         <div class="period-head">
-            <div class="period-title">{{ period.label }} {% if period.id is not none and period.is_current %}<span class="badge">Current</span>{% endif %}</div>
-            <div class="small">{{ period.dates }}</div>
+            <span class="period-label">{{ period.label }}</span>
+            <span class="period-dates">{{ period.dates }}</span>
+            {% if period.id is not none and period.is_current %}<span class="badge badge-current">Current</span>{% endif %}
         </div>
-        <div>
-            {% if newer %}<a class="nav-btn" href="{{ url_for('dashboard', period=newer) }}">Newer ›</a>{% endif %}
-            {% if period.id is none or not period.is_current %}<a class="link" href="{{ url_for('dashboard') }}">Current period</a>{% endif %}
+        <div class="period-side period-side-end">
+            {% if newer %}<a class="nav-btn" href="{{ url_for('dashboard', period=newer) }}">Newer ›</a>{% else %}<span class="nav-btn nav-btn-disabled" aria-hidden="true">Newer ›</span>{% endif %}
+            {% if period.id is none or not period.is_current %}<a class="nav-btn" href="{{ url_for('dashboard') }}">Current period</a>{% endif %}
         </div>
     </div>
-    <form method="get" action="{{ url_for('dashboard') }}" class="period-form">
-        <select name="period" class="auto-submit">
-            {% if period.id is none %}<option selected disabled>Custom range</option>{% endif %}
-            {% for year, group in periods|groupby('year') %}
-            <optgroup label="{{ year }}">
-                {% for p in group %}
-                <option value="{{ p.id }}" {% if p.id == period.id %}selected{% endif %}>{{ p.label }} ({{ p.dates }})</option>
+
+    <div class="period-controls">
+        <form method="get" action="{{ url_for('dashboard') }}" class="period-form">
+            <label class="sr-only" for="period-select">Choose period</label>
+            <select id="period-select" name="period" class="auto-submit">
+                {% if period.id is none %}<option selected disabled>Custom range</option>{% endif %}
+                {% for year, group in periods|groupby('year') %}
+                <optgroup label="{{ year }}">
+                    {% for p in group %}
+                    <option value="{{ p.id }}" {% if p.id == period.id %}selected{% endif %}>{{ p.label }} ({{ p.dates }})</option>
+                    {% endfor %}
+                </optgroup>
                 {% endfor %}
-            </optgroup>
-            {% endfor %}
-        </select>
-        <noscript><button type="submit">Go</button></noscript>
-    </form>
-    <form method="get" action="{{ url_for('dashboard') }}" class="range-form">
-        <input type="date" name="start" value="{{ range_start }}" class="date-picker" readonly required>
-        <span class="small" style="transform: translateY(10px);">to</span>
-        <input type="date" name="end" value="{{ range_end }}" class="date-picker" readonly required>
-        <button type="submit">Apply range</button>
-    </form>
-</div>
-
-<div class="summary">
-    <div class="card">
-        <span class="label">Spent</span>
-        <span class="value">{{ "%.2f"|format(period.spent) }}</span>
+            </select>
+            <noscript><button class="btn btn-ghost" type="submit">Go</button></noscript>
+        </form>
+        <form method="get" action="{{ url_for('dashboard') }}" class="range-form">
+            <label class="field">Start
+                <input type="date" name="start" value="{{ range_start }}" class="date-picker" readonly required>
+            </label>
+            <span class="range-sep" aria-hidden="true">to</span>
+            <label class="field">End
+                <input type="date" name="end" value="{{ range_end }}" class="date-picker" readonly required>
+            </label>
+            <button class="btn btn-ghost" type="submit">Apply range</button>
+        </form>
     </div>
-    <div class="card">
-        <span class="label">Limit</span>
-        <span class="value">
-            {% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}
-        </span>
-    </div>
-    <div class="card">
-        <span class="label">Remaining</span>
-        <span class="value {{ period.status }}-text">
-            {% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}-{% endif %}
-        </span>
-    </div>
-</div>
-
-<div class="card">
-    <div class="progress">
-        <div class="fill {{ period.status }}" data-width="{{ period.bar }}"></div>
-    </div>
-    {% if period.id is none %}
-    <p class="small">This is a temporary view; it is not a saved period.</p>
-    {% elif period.limit is not none %}
-    <p class="small">{{ "%.0f"|format(period.percent) }}% of limit used</p>
-    {% else %}
-    <p class="small">Set a limit for this period</p>
-    {% endif %}
-    {% if period.id is not none %}
-    <form action="{{ url_for('period_limit', period_id=period.id) }}" method="post" class="inline-form">
-        <input type="number" step="0.01" min="0" name="amount" placeholder="Period limit"
-               {% if period.limit is not none %}value="{{ period.limit }}"{% endif %}>
-        <button type="submit">Save limit</button>
-    </form>
-    <p class="small">Leave blank to clear. The next period inherits the latest saved limit.</p>
-    {% endif %}
-</div>
+</section>
 
 {% if period.id is none %}
-<div class="card">
-    <h2>{% if save_state == 'update' %}Update this period{% else %}Save this range{% endif %}</h2>
+<article class="card save-range-card">
+    <div class="card-head">
+        <h2>{% if save_state == 'update' %}Update this period{% else %}Save this range{% endif %}</h2>
+        <span class="badge">Unsaved range</span>
+    </div>
     {% if save_state == 'blocked' %}
     <p class="small">This range overlaps {{ overlap_names|join(', ') }}. Choose a range that stays within one month before saving.</p>
     {% else %}
@@ -132,66 +128,166 @@
                    {% if save_limit is not none %}value="{{ save_limit }}"{% endif %}>
         </label>
         <label class="check"><input type="checkbox" name="future" {% if future_default %}checked{% endif %}> Use this end date for future months</label>
-        <button type="submit">{{ 'Update period' if save_state == 'update' else 'Save period' }}</button>
+        <button class="btn btn-primary" type="submit">{{ 'Update period' if save_state == 'update' else 'Save period' }}</button>
     </form>
     <p class="small">New months inherit the latest saved limit.</p>
     {% endif %}
-</div>
+</article>
 {% endif %}
 
-<div class="card">
-    <h2>Add expense</h2>
-    <form action="{{ url_for('add') }}" method="post" class="add-form">
-        <input type="hidden" name="start" value="{{ range_start }}">
-        <input type="hidden" name="end" value="{{ range_end }}">
-        <input type="date" name="date" value="{{ today }}" max="{{ today }}" class="date-picker" readonly required>
-        <select name="category">
-            <option>Food</option>
-            <option>Transport</option>
-            <option>Shopping</option>
-            <option>Bills</option>
-            <option>Other</option>
-        </select>
-        <input type="number" step="0.01" min="0" name="amount" placeholder="Amount" required>
-        <input type="text" name="description" placeholder="Description">
-        <button type="submit">Add</button>
-    </form>
-</div>
+<div class="dashboard-grid">
+    <article class="card hero-card span-8{% if period.limit is none %} hero-card--nolimit{% endif %}">
+        <div class="hero-main">
+            <div class="hero-copy">
+                <span class="card-kicker">Spent this period</span>
+                <p class="hero-amount">{{ "%.2f"|format(period.spent) }}</p>
+                <p class="hero-sub">
+                    {% if period.limit is not none %}
+                    of {{ "%.2f"|format(period.limit) }} <span aria-hidden="true">·</span> {{ "%.0f"|format(period.percent) }}% used
+                    {% else %}
+                    No limit set for this period
+                    {% endif %}
+                </p>
+                <span class="status-pill status-{{ period.status }}">{{ status_label(period.status) }}</span>
+            </div>
+            {% if period.limit is not none %}
+            <div class="ring status-{{ period.status }}" style="--pct: {{ '%.1f'|format(period.bar) }};" role="img" aria-label="{{ '%.0f'|format(period.percent) }} percent of the period limit used">
+                <div class="ring-inner">
+                    <span class="ring-value">{{ "%.0f"|format(period.percent) }}%</span>
+                    <span class="ring-label">of limit</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
 
-<div class="card">
-    <h2>{{ period.dates }}</h2>
-    {% if expenses|length == 0 %}
-    <p class="small">No expenses in this period.</p>
-    {% else %}
-    <table>
-        <tr>
-            <th>{{ sortlink('Date', 'date') }}</th>
-            <th>{{ sortlink('Category', 'category') }}</th>
-            <th>{{ sortlink('Amount', 'amount') }}</th>
-            <th>{{ sortlink('Description', 'description') }}</th>
-            <th></th>
-        </tr>
-        {% for e in expenses %}
-        <tr>
-            <td>{{ e['date'] }}</td>
-            <td><span class="badge">{{ e['category'] }}</span></td>
-            <td>{{ "%.2f"|format(e['amount']) }}</td>
-            <td>{{ e['description'] or '' }}</td>
-            <td>
-                <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
-                    <input type="hidden" name="start" value="{{ range_start }}">
-                    <input type="hidden" name="end" value="{{ range_end }}">
-                    <input type="hidden" name="period" value="{{ period.id or '' }}">
-                    <button type="submit" class="danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-    {% endif %}
+        {% if period.limit is not none %}
+        <div class="progress" role="progressbar" aria-label="Budget used" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ [period.percent|round(0, 'floor')|int, 100]|min }}">
+            <span class="progress-fill {{ period.status }}" style="--progress-width: {{ '%.1f'|format(period.bar) }}%;"></span>
+        </div>
+        {% endif %}
+
+        <div class="hero-stats">
+            <div class="hero-stat">
+                <span class="stat-label">Limit</span>
+                <span class="stat-value">{% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}</span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-label">Remaining</span>
+                <span class="stat-value {% if period.remaining is not none %}{{ period.status }}-text{% endif %}">
+                    {% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}—{% endif %}
+                </span>
+            </div>
+            <div class="hero-stat">
+                <span class="stat-label">Expenses</span>
+                <span class="stat-value">{{ expenses|length }}</span>
+            </div>
+        </div>
+    </article>
+
+    <article class="card status-card span-4">
+        <div class="card-head">
+            <h2>Period details</h2>
+            <span class="badge {% if period.is_current %}badge-current{% endif %}">{{ 'Current' if period.is_current else 'Saved' }}</span>
+        </div>
+        <dl class="meta-list">
+            <div><dt>Range</dt><dd>{{ period.dates }}</dd></div>
+            <div><dt>Status</dt><dd class="{{ period.status }}-text">{{ status_label(period.status) }}</dd></div>
+            <div><dt>Limit</dt><dd>{% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}</dd></div>
+            <div><dt>Remaining</dt><dd class="{{ period.status }}-text">{% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}—{% endif %}</dd></div>
+        </dl>
+        {% if period.id is not none %}
+        <form action="{{ url_for('period_limit', period_id=period.id) }}" method="post" class="inline-form limit-form">
+            <label class="field">Set a limit
+                <input type="number" step="0.01" min="0" name="amount" placeholder="Period limit"
+                       {% if period.limit is not none %}value="{{ period.limit }}"{% endif %}>
+            </label>
+            <button class="btn btn-ghost" type="submit">Save limit</button>
+        </form>
+        <p class="small">Leave blank to clear. The next period inherits the latest saved limit.</p>
+        {% endif %}
+    </article>
+
+    <article class="card add-card span-5" id="add-expense">
+        <div class="card-head">
+            <h2>Add expense</h2>
+            <span class="muted">{{ today }}</span>
+        </div>
+        <form action="{{ url_for('add') }}" method="post" class="add-form">
+            <input type="hidden" name="start" value="{{ range_start }}">
+            <input type="hidden" name="end" value="{{ range_end }}">
+            <label class="field">Date
+                <input type="date" name="date" value="{{ today }}" max="{{ today }}" class="date-picker" readonly required>
+            </label>
+            <label class="field">Category
+                <select name="category">
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Shopping</option>
+                    <option>Bills</option>
+                    <option>Other</option>
+                </select>
+            </label>
+            <label class="field">Amount
+                <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" inputmode="decimal" required>
+            </label>
+            <label class="field field-grow">Description
+                <input type="text" name="description" placeholder="What was it for?">
+            </label>
+            <button class="btn btn-primary" type="submit">Add expense</button>
+        </form>
+    </article>
+
+    <article class="card transactions-card span-7">
+        <div class="card-head">
+            <div>
+                <h2>Transactions</h2>
+                <span class="muted">{{ expenses|length }} {{ 'expense' if expenses|length == 1 else 'expenses' }}</span>
+            </div>
+            <span class="muted">{{ period.dates }}</span>
+        </div>
+        {% if expenses|length == 0 %}
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">+</span>
+            <strong>No expenses in this period</strong>
+            <p>Add your first expense to start filling this period.</p>
+            <a class="btn btn-ghost btn-sm" href="#add-expense">Add an expense</a>
+        </div>
+        {% else %}
+        <div class="table-wrap">
+            <table class="expense-table">
+                <thead>
+                    <tr>
+                        <th>{{ sortlink('Date', 'date') }}</th>
+                        <th>{{ sortlink('Category', 'category') }}</th>
+                        <th>{{ sortlink('Amount', 'amount') }}</th>
+                        <th>{{ sortlink('Description', 'description') }}</th>
+                        <th><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in expenses %}
+                    <tr>
+                        <td class="nowrap">{{ e['date'] }}</td>
+                        <td><span class="badge cat-badge cat-{{ e['category']|lower }}">{{ e['category'] }}</span></td>
+                        <td class="amount">{{ "%.2f"|format(e['amount']) }}</td>
+                        <td>{{ e['description'] or '' }}</td>
+                        <td class="actions-cell">
+                            <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
+                                <input type="hidden" name="start" value="{{ range_start }}">
+                                <input type="hidden" name="end" value="{{ range_end }}">
+                                <input type="hidden" name="period" value="{{ period.id or '' }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </article>
 </div>
 {% endif %}
-
 {% endblock %}
 
 {% block scripts %}

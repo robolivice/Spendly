@@ -1,0 +1,156 @@
+[data-variant="saas"] {
+    --bg: #f6f8fd;
+    --surface: #ffffff;
+    --surface-2: #f1f4fb;
+    --border: #e6ebf5;
+    --text: #172033;
+    --muted: #5a647e;
+    --accent: #4058d8;
+    --accent-2: #0f9488;
+    --accent-contrast: #ffffff;
+    --ok: #0b6b4f;
+    --warn: #8a5606;
+    --over: #b32636;
+    --ok-fill: #12946e;
+    --warn-fill: #d98a0b;
+    --over-fill: #e5484d;
+    --chart-track: rgba(23, 32, 51, 0.07);
+    --cat-food: #9a5b00;
+    --cat-transport: #0e6f7d;
+    --cat-shopping: #5b3fb5;
+    --cat-bills: #b32636;
+    --cat-other: #5a647e;
+    --radius: 20px;
+    --radius-sm: 12px;
+    --card-pad: 24px;
+    --shadow: 0 12px 34px rgba(28, 43, 74, 0.07);
+    --shadow-sm: 0 4px 14px rgba(28, 43, 74, 0.05);
+    --max-width: 1200px;
+}
+
+[data-variant="saas"] body {
+    background:
+        radial-gradient(1100px 560px at 50% -18%, rgba(79, 110, 247, 0.08), transparent 65%),
+        var(--bg);
+}
+
+[data-variant="saas"] .app-header {
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+[data-variant="saas"] .brand-mark {
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #6e8bff);
+    box-shadow: 0 7px 18px rgba(79, 110, 247, 0.24);
+}
+
+[data-variant="saas"] .nav-link {
+    padding: 9px 13px;
+    border-radius: 999px;
+}
+
+[data-variant="saas"] .nav-link.active {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--accent);
+    box-shadow: none;
+}
+
+[data-variant="saas"] .profile-chip {
+    background: var(--surface-2);
+}
+
+[data-variant="saas"] .theme-picker {
+    background: var(--surface-2);
+}
+
+[data-variant="saas"] .card {
+    border-color: var(--border);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+[data-variant="saas"] .hero-card {
+    background:
+        radial-gradient(620px 280px at 100% 0%, rgba(79, 110, 247, 0.09), transparent 70%),
+        var(--surface);
+}
+
+[data-variant="saas"] .hero-amount {
+    background: none;
+    -webkit-text-fill-color: var(--text);
+    color: var(--text);
+    filter: none;
+}
+
+[data-variant="saas"] .hero-sub {
+    font-size: 0.9rem;
+}
+
+[data-variant="saas"] .hero-stats {
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 18px;
+}
+
+[data-variant="saas"] .stat-label {
+    font-size: 0.72rem;
+}
+
+[data-variant="saas"] .stat-value {
+    margin-top: 4px;
+    font-size: 1.1rem;
+}
+
+[data-variant="saas"] .progress {
+    height: 9px;
+}
+
+[data-variant="saas"] .period-bar {
+    background: var(--surface);
+    padding: 16px 20px;
+}
+
+[data-variant="saas"] .btn-primary {
+    box-shadow: 0 6px 16px rgba(79, 110, 247, 0.22);
+}
+
+[data-variant="saas"] .btn-ghost {
+    background: var(--surface);
+}
+
+[data-variant="saas"] .profile-card {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+[data-variant="saas"] .profile-card.is-active {
+    border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent), var(--shadow);
+}
+
+[data-variant="saas"] .profile-card--new {
+    background: color-mix(in srgb, var(--surface) 60%, transparent);
+}
+
+[data-variant="saas"] .avatar {
+    border-radius: 17px;
+    box-shadow: 0 7px 18px rgba(79, 110, 247, 0.2);
+}
+
+[data-variant="saas"] .theme-option {
+    background: var(--surface-2);
+}
+
+[data-variant="saas"] .theme-option.is-selected,
+[data-variant="saas"] .theme-option:has(input:checked) {
+    background: var(--surface);
+}
+
+[data-variant="saas"] .mobile-nav {
+    background: color-mix(in srgb, var(--surface) 88%, transparent);
+}
+
+[data-variant="saas"] .cal-day.selected {
+    box-shadow: 0 6px 18px rgba(64, 88, 216, 0.25);
+}

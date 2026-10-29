@@ -1,0 +1,220 @@
+[data-variant="glass"] {
+    --bg: #07070f;
+    --surface: rgba(20, 20, 34, 0.72);
+    --surface-2: rgba(32, 32, 52, 0.8);
+    --border: rgba(255, 255, 255, 0.09);
+    --text: #f3efff;
+    --muted: #a29abc;
+    --accent: #b16cff;
+    --accent-2: #22d3ee;
+    --accent-contrast: #0b0616;
+    --ok: #34e2a0;
+    --warn: #ffc857;
+    --over: #ff5c8a;
+    --ok-fill: #34e2a0;
+    --warn-fill: #ffc857;
+    --over-fill: #ff5c8a;
+    --chart-track: rgba(177, 108, 255, 0.12);
+    --cat-food: #ffc857;
+    --cat-transport: #22d3ee;
+    --cat-shopping: #c79bff;
+    --cat-bills: #ff5c8a;
+    --cat-other: #a29abc;
+    --radius: 22px;
+    --radius-sm: 14px;
+    --card-pad: 22px;
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+    --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.28);
+    --max-width: 1200px;
+}
+
+[data-variant="glass"] body {
+    background:
+        radial-gradient(900px 620px at 12% -12%, rgba(177, 108, 255, 0.24), transparent 60%),
+        radial-gradient(820px 560px at 92% 4%, rgba(34, 211, 238, 0.16), transparent 58%),
+        radial-gradient(760px 520px at 50% 110%, rgba(255, 92, 138, 0.12), transparent 62%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+[data-variant="glass"] .app-header {
+    top: 14px;
+    margin-top: 14px;
+    padding: 0 24px;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
+}
+
+[data-variant="glass"] .header-inner {
+    max-width: 1200px;
+    padding: 10px 12px 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background:
+        linear-gradient(color-mix(in srgb, var(--bg) 72%, transparent), color-mix(in srgb, var(--bg) 72%, transparent)) padding-box,
+        linear-gradient(110deg, rgba(177, 108, 255, 0.65), rgba(34, 211, 238, 0.4), rgba(255, 92, 138, 0.45)) border-box;
+    backdrop-filter: blur(26px) saturate(150%);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36), 0 0 40px rgba(177, 108, 255, 0.12);
+}
+
+[data-variant="glass"] .nav-link {
+    border-radius: 999px;
+    padding: 9px 14px;
+}
+
+[data-variant="glass"] .nav-link.active {
+    background: linear-gradient(115deg, rgba(177, 108, 255, 0.28), rgba(34, 211, 238, 0.16));
+    color: var(--text);
+    box-shadow: inset 0 0 0 1px rgba(177, 108, 255, 0.35);
+}
+
+[data-variant="glass"] .brand-mark {
+    border-radius: 12px;
+    background: linear-gradient(135deg, #b16cff, #22d3ee);
+    color: #0b0616;
+    box-shadow: 0 0 24px rgba(177, 108, 255, 0.55);
+}
+
+[data-variant="glass"] .profile-chip,
+[data-variant="glass"] .theme-picker {
+    background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+    backdrop-filter: blur(10px);
+}
+
+[data-variant="glass"] .card {
+    position: relative;
+    border: 1px solid transparent;
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012)),
+        var(--surface);
+    backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+[data-variant="glass"] .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(177, 108, 255, 0.34), transparent 40%, transparent 65%, rgba(34, 211, 238, 0.22));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+[data-variant="glass"] .hero-card {
+    background:
+        radial-gradient(680px 320px at 8% 0%, rgba(177, 108, 255, 0.24), transparent 62%),
+        radial-gradient(520px 280px at 100% 100%, rgba(34, 211, 238, 0.14), transparent 66%),
+        linear-gradient(155deg, rgba(36, 24, 58, 0.82), rgba(14, 14, 26, 0.86));
+}
+
+[data-variant="glass"] .hero-amount {
+    background: linear-gradient(100deg, var(--text) 30%, #c79bff 60%, #7fe9f7 95%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 22px rgba(177, 108, 255, 0.25));
+}
+
+[data-variant="glass"] .progress {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+[data-variant="glass"] .period-bar {
+    background: color-mix(in srgb, var(--surface) 70%, transparent);
+}
+
+[data-variant="glass"] .btn-primary {
+    background: linear-gradient(120deg, #a855f7, #7c3aed 55%, #0891b2);
+    box-shadow: 0 8px 26px rgba(168, 85, 247, 0.36);
+}
+
+[data-variant="glass"] .btn-ghost,
+[data-variant="glass"] .select,
+[data-variant="glass"] .theme-select,
+[data-variant="glass"] input,
+[data-variant="glass"] select,
+[data-variant="glass"] textarea {
+    background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+    border-color: var(--border);
+    backdrop-filter: blur(10px);
+}
+
+[data-variant="glass"] .profile-card {
+    background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
+        var(--surface);
+    backdrop-filter: blur(22px) saturate(140%);
+}
+
+[data-variant="glass"] .profile-card.is-active {
+    border-color: rgba(177, 108, 255, 0.5);
+    box-shadow: 0 0 0 1px rgba(177, 108, 255, 0.3), 0 24px 60px rgba(177, 108, 255, 0.16);
+}
+
+[data-variant="glass"] .profile-card--new {
+    border-style: dashed;
+    background: transparent;
+    box-shadow: none;
+}
+
+[data-variant="glass"] .profile-card--new::before {
+    display: none;
+}
+
+[data-variant="glass"] .avatar {
+    background: linear-gradient(135deg, #b16cff, #22d3ee);
+    color: #0b0616;
+    box-shadow: 0 0 24px rgba(177, 108, 255, 0.35);
+}
+
+[data-variant="glass"] .theme-option {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-variant="glass"] .theme-option.is-selected,
+[data-variant="glass"] .theme-option:has(input:checked) {
+    background: rgba(177, 108, 255, 0.2);
+    box-shadow: inset 0 0 0 1px rgba(177, 108, 255, 0.3);
+}
+
+[data-variant="glass"] .flash {
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(16px);
+    border-color: rgba(177, 108, 255, 0.2);
+}
+
+[data-variant="glass"] dialog {
+    background: color-mix(in srgb, var(--bg) 88%, #1a1030);
+    border-color: rgba(177, 108, 255, 0.3);
+    box-shadow: 0 40px 110px rgba(0, 0, 0, 0.62), 0 0 60px rgba(177, 108, 255, 0.12);
+}
+
+[data-variant="glass"] .mobile-nav {
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-top-color: rgba(177, 108, 255, 0.2);
+}
+
+[data-variant="glass"] .cal-day.selected {
+    box-shadow: 0 6px 18px rgba(177, 108, 255, 0.35);
+}
+
+@media (max-width: 860px) {
+    [data-variant="glass"] .app-header {
+        top: 8px;
+        margin-top: 8px;
+        padding: 0 10px;
+    }
+
+    [data-variant="glass"] .header-inner {
+        padding: 10px 12px;
+        border-radius: 18px;
+        gap: 12px;
+    }
+}

@@ -56,7 +56,9 @@ def safe_next(default):
 @app.route("/")
 def index():
     profiles = db.getProfiles()
-    return render_template("profiles.html", profiles=profiles)
+    return render_template(
+        "profiles.html", profiles=profiles, active_pid=session.get("pid")
+    )
 
 
 @app.route("/profile/create", methods=["POST"])
@@ -295,9 +297,15 @@ def history():
     rows = db.getPeriodHistory(pid, year, sort, direction)
     periods = [make_period(row, today, row["spent"]) for row in rows]
     years = [row["year"] for row in db.getPeriodYears(pid)]
+    summary = {
+        "count": len(periods),
+        "spent": sum(period["spent"] for period in periods),
+        "over": sum(1 for period in periods if period["status"] == "over"),
+        "near": sum(1 for period in periods if period["status"] == "warn"),
+    }
     return render_template(
         "history.html", profile=profile, periods=periods, years=years, year=year,
-        sort=sort, direction=direction
+        sort=sort, direction=direction, summary=summary
     )
 
 
