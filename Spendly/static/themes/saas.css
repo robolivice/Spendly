@@ -32,10 +32,27 @@
     background:
         radial-gradient(1100px 560px at 50% -18%, rgba(79, 110, 247, 0.08), transparent 65%),
         var(--bg);
+    background-attachment: fixed;
 }
 
 [data-variant="saas"] .app-header {
-    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    top: 0;
+    padding: 14px 24px 0;
+    border: 0;
+    background:
+        radial-gradient(1100px 560px at 50% -18%, rgba(79, 110, 247, 0.08), transparent 65%),
+        var(--bg);
+    background-attachment: fixed;
+    backdrop-filter: none;
+}
+
+[data-variant="saas"] .header-inner {
+    padding: 11px 14px 11px 18px;
+    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+    backdrop-filter: blur(20px) saturate(130%);
+    box-shadow: 0 14px 34px rgba(28, 43, 74, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 [data-variant="saas"] .brand-mark {
@@ -153,4 +170,66 @@
 
 [data-variant="saas"] .cal-day.selected {
     box-shadow: 0 6px 18px rgba(64, 88, 216, 0.25);
+}
+
+[data-variant="saas"] .dropdown-trigger {
+    border-color: #dfe6f3;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(28, 43, 74, 0.05);
+}
+
+[data-variant="saas"] .dropdown-trigger:hover {
+    border-color: #b9c6ef;
+    background: #ffffff;
+    box-shadow: 0 6px 16px rgba(64, 88, 216, 0.1);
+}
+
+[data-variant="saas"] .dropdown-trigger.is-open {
+    border-color: #4058d8;
+    box-shadow: 0 0 0 3px rgba(64, 88, 216, 0.12);
+}
+
+[data-variant="saas"] .dropdown-chevron {
+    background: #eef2ff;
+    color: #4058d8;
+}
+
+[data-variant="saas"] .dropdown-menu {
+    border-color: #e3e9f4;
+    background: #ffffff;
+    box-shadow: 0 20px 44px rgba(28, 43, 74, 0.16), 0 2px 6px rgba(28, 43, 74, 0.06);
+}
+
+[data-variant="saas"] .dropdown-option {
+    color: #172033;
+}
+
+[data-variant="saas"] .dropdown-option:hover,
+[data-variant="saas"] .dropdown-option.is-active {
+    background: #f2f5fd;
+}
+
+[data-variant="saas"] .dropdown-option[aria-selected="true"] {
+    background: #eef2ff;
+    font-weight: 650;
+}
+
+[data-variant="saas"] .dropdown-option[aria-selected="true"].is-active {
+    background: #e6ecff;
+}
+
+[data-variant="saas"] .dropdown-group + .dropdown-group {
+    border-top-color: #edf1f8;
+}
+
+@media (max-width: 860px) {
+    [data-variant="saas"] .app-header {
+        padding: 8px 10px 0;
+    }
+
+    [data-variant="saas"] .header-inner {
+        padding: 10px 12px;
+        border-radius: 999px;
+        gap: 12px;
+    }
 }

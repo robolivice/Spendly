@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Theme gallery · Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='gallery.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set dark_count = themes|selectattr("mode", "equalto", "Dark")|list|length %}
+{% set light_count = themes|length - dark_count %}
+<div class="gallery-page">
+    <section class="gallery-hero" aria-labelledby="gallery-title">
+        <div class="gallery-hero-copy">
+            <p class="eyebrow">Theme gallery</p>
+            <h1 id="gallery-title">One budget tracker.<br><span>Ten personalities.</span></h1>
+            <p class="gallery-lede">
+                Every look below is the real Spendly dashboard, not a mockup. Preview the
+                desktop or mobile capture, then apply a theme where you stand. Your choice
+                is saved in this browser.
+            </p>
+            <div class="gallery-hero-actions">
+                <a class="btn btn-primary" href="#themes">Browse themes</a>
+                <a class="btn btn-ghost" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+            </div>
+        </div>
+        <ul class="gallery-facts" aria-label="Gallery facts">
+            <li><strong>{{ themes|length }}</strong><span>complete themes</span></li>
+            <li><strong>{{ dark_count }} + {{ light_count }}</strong><span>dark + light</span></li>
+            <li><strong>2</strong><span>real viewports</span></li>
+        </ul>
+    </section>
+
+    <section class="gallery-section" id="themes" aria-labelledby="themes-title">
+        <div class="gallery-section-head">
+            <div>
+                <p class="eyebrow">Pick a personality</p>
+                <h2 id="themes-title">Themes</h2>
+            </div>
+            <p class="gallery-section-copy">
+                Filter by mood or layout, search by style, then preview the desktop
+                and mobile app.
+            </p>
+        </div>
+
+        <div class="gallery-controls" aria-label="Theme filters">
+            <label class="gallery-search" for="theme-search">
+                <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                <span class="sr-only">Search themes</span>
+                <input id="theme-search" type="search" placeholder="Search name, style, or color" autocomplete="off">
+            </label>
+
+            <div class="gallery-filter-group" role="group" aria-label="Filter by mode">
+                <button class="gallery-filter is-active" type="button" data-mode-filter="all" aria-pressed="true">
+                    All <span>{{ themes|length }}</span>
+                </button>
+                <button class="gallery-filter" type="button" data-mode-filter="dark" aria-pressed="false">
+                    Dark <span>{{ dark_count }}</span>
+                </button>
+                <button class="gallery-filter" type="button" data-mode-filter="light" aria-pressed="false">
+                    Light <span>{{ light_count }}</span>
+                </button>
+            </div>
+
+            <label class="gallery-layout">
+                <span class="sr-only">Filter by layout</span>
+                <select id="gallery-shell" aria-label="Filter by layout">
+                    <option value="all">All layouts</option>
+                    {% for shell in themes|map(attribute="shell")|unique|list %}
+                    <option value="{{ shell|lower }}">{{ shell }} ({{ themes|selectattr("shell", "equalto", shell)|list|length }})</option>
+                    {% endfor %}
+                </select>
+            </label>
+
+            <button class="btn btn-ghost btn-sm gallery-clear" type="button" data-reset-filters>Clear</button>
+        </div>
+
+        <div class="gallery-result-line">
+            <p id="gallery-count" aria-live="polite">Showing {{ themes|length }} themes</p>
+            <p class="gallery-active-theme">Applied: <strong id="gallery-active-name">—</strong></p>
+        </div>
+
+        <div class="gallery-grid" id="gallery-grid">
+            {% for theme in themes %}
+            {% set desktop = url_for('static', filename='img/themes/' ~ theme.id ~ '-desktop.jpg') %}
+            {% set mobile = url_for('static', filename='img/themes/' ~ theme.id ~ '-mobile.jpg') %}
+            <article class="gallery-card" data-theme-id="{{ theme.id }}" data-mode="{{ theme.mode|lower }}"
+                data-shell="{{ theme.shell|lower }}" data-name="{{ theme.name }}"
+                data-tagline="{{ theme.tagline }}" data-desktop-src="{{ desktop }}" data-mobile-src="{{ mobile }}"
+                data-search="{{ (theme.name ~ ' ' ~ theme.description ~ ' ' ~ theme.tags|join(' ') ~ ' ' ~ theme.mode ~ ' ' ~ theme.shell)|lower }}"
+                style="--theme-accent: {{ theme.accent }}; --theme-accent-2: {{ theme.accent_2 }};">
+                <a class="gallery-thumb" href="{{ desktop }}" target="_blank" rel="noopener"
+                    data-preview-theme="{{ theme.id }}">
+                    <img src="{{ desktop }}" alt="" width="1440" height="900" loading="lazy" decoding="async">
+                    <span class="gallery-mode-flag">{{ theme.mode }}</span>
+                    <span class="gallery-preview-cue">
+                        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                        Preview
+                    </span>
+                    <span class="sr-only">{{ theme.name }} theme screenshots</span>
+                </a>
+                <div class="gallery-card-body">
+                    <div class="gallery-card-heading">
+                        <h3>{{ theme.name }}</h3>
+                        <span class="gallery-number">{{ "%02d"|format(loop.index) }}</span>
+                    </div>
+                    <p class="gallery-card-description">{{ theme.description }}</p>
+                    <ul class="gallery-tags" aria-label="Theme traits">
+                        {% for tag in theme.tags %}
+                        <li>{{ tag }}</li>
+                        {% endfor %}
+                    </ul>
+                    <div class="gallery-card-meta">
+                        <span>{{ theme.shell }}</span>
+                        <span class="gallery-current-flag" data-current-flag hidden>
+                            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+                            Current
+                        </span>
+                    </div>
+                    <div class="gallery-card-actions">
+                        <button class="btn btn-primary gallery-apply" type="button" data-apply-theme="{{ theme.id }}"
+                            aria-pressed="false">
+                            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"></use></svg>
+                            <span data-apply-label>Use theme</span>
+                        </button>
+                        <a class="btn btn-ghost gallery-preview-link" href="{{ desktop }}" target="_blank" rel="noopener"
+                            data-preview-theme="{{ theme.id }}">Preview</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+
+        <div class="gallery-empty" id="gallery-empty" hidden>
+            <p class="gallery-empty-title">No themes match those filters.</p>
+            <p>Try a broader search or reset the filters to see all {{ themes|length }} themes.</p>
+            <button class="btn btn-ghost" type="button" data-reset-filters>Clear filters</button>
+        </div>
+    </section>
+
+    <section class="gallery-notes" aria-label="How themes work">
+        <article class="gallery-note">
+            <span class="gallery-note-index">01</span>
+            <h2>Live, not a mockup</h2>
+            <p>Each capture comes from the running Flask app. Applying a theme updates the whole shell immediately.</p>
+        </article>
+        <article class="gallery-note">
+            <span class="gallery-note-index">02</span>
+            <h2>One browser, one choice</h2>
+            <p>The active theme lives in local storage, so it follows you across profiles without touching your data.</p>
+        </article>
+        <article class="gallery-note">
+            <span class="gallery-note-index">03</span>
+            <h2>Same app underneath</h2>
+            <p>Routes, forms, totals, and charts stay identical. Only the typography, color, and surface treatment change.</p>
+        </article>
+    </section>
+
+    <p class="sr-only" id="gallery-announcer" role="status" aria-live="polite"></p>
+</div>
+
+<dialog id="theme-preview" class="gallery-dialog" aria-labelledby="theme-preview-title">
+    <div class="gallery-dialog-top">
+        <div>
+            <p class="card-kicker">Theme preview</p>
+            <h2 id="theme-preview-title">Theme preview</h2>
+            <p class="gallery-dialog-lede" id="theme-preview-description"></p>
+        </div>
+        <button class="gallery-dialog-close" type="button" aria-label="Close theme preview">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="gallery-dialog-bar">
+        <div class="gallery-device-toggle" role="group" aria-label="Preview viewport">
+            <button type="button" data-device="desktop" aria-pressed="true">Desktop</button>
+            <button type="button" data-device="mobile" aria-pressed="false">Mobile</button>
+        </div>
+        <a class="gallery-dialog-open" id="theme-preview-open" href="#" target="_blank" rel="noopener">Open full size</a>
+    </div>
+    <div class="gallery-dialog-stage" id="theme-preview-stage" data-device="desktop">
+        <img id="theme-preview-image" src="" alt="">
+    </div>
+    <div class="gallery-dialog-footer">
+        <p>Previews are captured from the real app at 1440 × 900 and 390 × 844.</p>
+        <button class="btn btn-primary" type="button" id="theme-preview-apply">Use this theme</button>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gallery.js') }}" defer></script>
+{% endblock %}

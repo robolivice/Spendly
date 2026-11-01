@@ -1,13 +1,32 @@
-from flask import Flask, flash, redirect, render_template, request, session, url_for
+import os
 from datetime import date
+
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 
 import cycles
 import db
+import theme_catalog
 
 app = Flask(__name__)
-app.secret_key = "change-this-secret"
+app.secret_key = os.environ.get("SPENDLY_SECRET_KEY", "spendly-development-key")
 
 db.setup()
+
+
+@app.context_processor
+def inject_themes():
+    return {
+        "themes": theme_catalog.THEMES,
+        "theme_ids": theme_catalog.THEME_IDS,
+        "default_theme": theme_catalog.DEFAULT_THEME,
+        "default_theme_meta": theme_catalog.THEMES_BY_ID[
+            theme_catalog.DEFAULT_THEME
+        ]["meta_color"],
+        "theme_config": [
+            {"id": theme["id"], "name": theme["name"], "metaColor": theme["meta_color"]}
+            for theme in theme_catalog.THEMES
+        ],
+    }
 
 
 def make_period(row, today, spent=0):
@@ -273,6 +292,15 @@ def period_settings():
         "period_settings.html", profile=profile, cycle=cycle, periods=views,
         period=period, new_start=new_start, new_end=new_end
     )
+
+
+@app.route("/themes")
+def themes():
+    profile = None
+    pid = session.get("pid")
+    if pid is not None:
+        profile = db.getProfile(pid)
+    return render_template("themes.html", profile=profile)
 
 
 @app.route("/history")

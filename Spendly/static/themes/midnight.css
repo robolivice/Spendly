@@ -1,0 +1,424 @@
+[data-variant="midnight"] {
+    --bg: #0a0d12;
+    --surface: #12151c;
+    --surface-2: #1a1e27;
+    --border: #2c2d33;
+    --text: #f4efe3;
+    --muted: #aaa28e;
+    --accent: #d8b25f;
+    --accent-2: #b58a3c;
+    --accent-contrast: #15110a;
+    --over-contrast: #2a0d11;
+    --ok: #7fd1a4;
+    --warn: #e7c56b;
+    --over: #e17b6b;
+    --ok-fill: #3d9a6f;
+    --warn-fill: #bd8f2e;
+    --over-fill: #b95445;
+    --chart-track: rgba(216, 178, 95, 0.12);
+    --chart-grid: rgba(216, 178, 95, 0.09);
+    --cat-food: #e7c56b;
+    --cat-transport: #7fd1a4;
+    --cat-shopping: #c3a6ff;
+    --cat-bills: #e17b6b;
+    --cat-other: #aaa28e;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --card-pad: 22px;
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
+    --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.3);
+    --max-width: 1160px;
+    --font: "Avenir Next", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    --font-display: "Bodoni MT", "Didot", "Playfair Display", Georgia, serif;
+}
+
+[data-variant="midnight"] body {
+    background:
+        radial-gradient(900px 520px at 88% -12%, rgba(216, 178, 95, 0.14), transparent 62%),
+        radial-gradient(800px 620px at 0% 110%, rgba(90, 68, 34, 0.16), transparent 68%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+[data-variant="midnight"] .app-header {
+    top: 0;
+    padding: 14px 24px 0;
+    border: 0;
+    background:
+        radial-gradient(900px 520px at 88% -12%, rgba(216, 178, 95, 0.14), transparent 62%),
+        radial-gradient(800px 620px at 0% 110%, rgba(90, 68, 34, 0.16), transparent 68%),
+        var(--bg);
+    background-attachment: fixed;
+    backdrop-filter: none;
+}
+
+[data-variant="midnight"] .header-inner {
+    padding: 12px 16px 12px 20px;
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 86%, transparent);
+    backdrop-filter: blur(20px) saturate(130%);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.5), 0 0 26px rgba(216, 178, 95, 0.12);
+}
+
+[data-variant="midnight"] .brand {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.035em;
+}
+
+[data-variant="midnight"] .brand-mark {
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, #f7e4ae, #b8862f 72%);
+    color: #191308;
+    box-shadow: 0 0 24px rgba(216, 178, 95, 0.3);
+}
+
+[data-variant="midnight"] .nav-link {
+    border-radius: 4px;
+    font-size: 0.69rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+[data-variant="midnight"] .nav-link.active {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    box-shadow: inset 0 -1px 0 var(--accent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .select,
+[data-variant="midnight"] .icon-btn,
+[data-variant="midnight"] input,
+[data-variant="midnight"] select,
+[data-variant="midnight"] textarea {
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+
+[data-variant="midnight"] .select {
+    background-color: color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+
+[data-variant="midnight"] .page-container {
+    padding-top: 40px;
+}
+
+[data-variant="midnight"] .page-head h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.8vw, 2.9rem);
+    font-weight: 500;
+    letter-spacing: 0.005em;
+}
+
+[data-variant="midnight"] .page-sub {
+    font-size: 0.89rem;
+}
+
+[data-variant="midnight"] .eyebrow {
+    color: var(--accent);
+    font-size: 0.66rem;
+    font-weight: 650;
+    letter-spacing: 0.23em;
+}
+
+[data-variant="midnight"] .eyebrow::before {
+    content: "—";
+    margin-right: 9px;
+    opacity: 0.65;
+}
+
+[data-variant="midnight"] .card {
+    border-color: color-mix(in srgb, var(--accent) 16%, var(--border));
+    background: linear-gradient(160deg, color-mix(in srgb, var(--surface) 96%, white), var(--surface));
+}
+
+[data-variant="midnight"] .card-head h2,
+[data-variant="midnight"] .settings-card h2,
+[data-variant="midnight"] .profile-card h2,
+[data-variant="midnight"] .dialog h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0.005em;
+}
+
+[data-variant="midnight"] .hero-card {
+    border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+    background:
+        radial-gradient(700px 340px at 82% -20%, rgba(216, 178, 95, 0.18), transparent 62%),
+        linear-gradient(160deg, color-mix(in srgb, var(--surface) 96%, white), var(--surface));
+}
+
+[data-variant="midnight"] .hero-amount {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    background: linear-gradient(180deg, #f9ecc7 8%, #d8b25f 58%, #a97a27 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 18px rgba(216, 178, 95, 0.12));
+}
+
+[data-variant="midnight"] .card-kicker,
+[data-variant="midnight"] .stat-label {
+    letter-spacing: 0.06em;
+}
+
+[data-variant="midnight"] .progress {
+    height: 6px;
+    background: color-mix(in srgb, var(--accent) 11%, transparent);
+}
+
+[data-variant="midnight"] .badge {
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+    border-radius: 3px;
+    background: transparent;
+}
+
+[data-variant="midnight"] .badge-current {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+[data-variant="midnight"] .status-pill {
+    border-radius: 3px;
+}
+
+[data-variant="midnight"] .btn {
+    border-radius: 6px;
+    font-size: 0.78rem;
+    letter-spacing: 0.045em;
+}
+
+[data-variant="midnight"] .btn-primary {
+    background: linear-gradient(135deg, #e8c679, #b8892f);
+    color: #1b1306;
+    box-shadow: 0 8px 22px rgba(216, 178, 95, 0.22);
+}
+
+[data-variant="midnight"] .btn-primary:hover {
+    opacity: 0.96;
+}
+
+[data-variant="midnight"] .btn-ghost {
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+    background: transparent;
+    color: var(--text);
+}
+
+[data-variant="midnight"] .period-bar {
+    background: color-mix(in srgb, var(--surface) 82%, transparent);
+}
+
+[data-variant="midnight"] .chip {
+    border-radius: 4px;
+    background: transparent;
+}
+
+[data-variant="midnight"] .txn-row {
+    border-top-color: color-mix(in srgb, var(--accent) 13%, var(--border));
+}
+
+[data-variant="midnight"] .txn-row:hover {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+[data-variant="midnight"] .txn-icon {
+    border: 1px solid color-mix(in srgb, var(--cat) 30%, transparent);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cat) 12%, transparent);
+}
+
+[data-variant="midnight"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 36%, var(--border));
+}
+
+[data-variant="midnight"] .history-table th {
+    color: var(--accent);
+    letter-spacing: 0.11em;
+}
+
+[data-variant="midnight"] .profile-card.is-active {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent), 0 22px 55px rgba(0, 0, 0, 0.38);
+}
+
+[data-variant="midnight"] .avatar {
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e6c476, #9a6f24);
+    color: #1a1306;
+    box-shadow: 0 0 22px rgba(216, 178, 95, 0.22);
+}
+
+[data-variant="midnight"] .settings-icon {
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .theme-switch {
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+
+[data-variant="midnight"] .theme-choice {
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+[data-variant="midnight"] .theme-choice.active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .dialog {
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: 0 40px 110px rgba(0, 0, 0, 0.58);
+}
+
+[data-variant="midnight"] .toast {
+    border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+[data-variant="midnight"] .mobile-nav {
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    border-top-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+[data-variant="midnight"] .mobile-nav-link {
+    border-radius: 4px;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+[data-variant="midnight"] .app-footer {
+    border-top-color: color-mix(in srgb, var(--accent) 16%, var(--border));
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+    [data-variant="midnight"] .page-head h1 {
+        font-size: 1.9rem;
+    }
+}
+
+[data-variant="midnight"] .theme-gallery-link {
+    border-radius: 50%;
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .theme-gallery-link.is-active {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .theme-picker {
+    border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+}
+
+[data-variant="midnight"] .dropdown-trigger {
+    border-radius: 6px;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 84%, transparent);
+    box-shadow: none;
+}
+
+[data-variant="midnight"] .dropdown-trigger:hover {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 94%, transparent);
+    box-shadow: 0 8px 22px rgba(216, 178, 95, 0.1);
+}
+
+[data-variant="midnight"] .dropdown-trigger.is-open {
+    border-color: color-mix(in srgb, var(--accent) 58%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+[data-variant="midnight"] .dropdown-chevron {
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="midnight"] .dropdown-menu {
+    border-radius: 8px;
+    border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.58);
+}
+
+[data-variant="midnight"] .dropdown-option {
+    border-radius: 4px;
+}
+
+[data-variant="midnight"] .dropdown-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+}
+
+[data-variant="midnight"] .theme-option {
+    border-color: color-mix(in srgb, var(--accent) 14%, var(--border));
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+[data-variant="midnight"] .theme-option.is-selected,
+[data-variant="midnight"] .theme-option:has(input:checked) {
+    border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+[data-variant="midnight"] .theme-swatch {
+    border-radius: 5px;
+}
+
+[data-variant="midnight"] .theme-copy strong {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+}
+
+[data-variant="midnight"] .nav-btn {
+    border-radius: 4px;
+}
+
+[data-variant="midnight"] .calendar {
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+    border-radius: 10px;
+}
+
+[data-variant="midnight"] .cal-day {
+    border-radius: 50%;
+}
+
+[data-variant="midnight"] .cal-day.selected {
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+[data-variant="midnight"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 34%, var(--border));
+}
+
+@media (max-width: 860px) {
+    [data-variant="midnight"] .app-header {
+        padding: 8px 10px 0;
+    }
+
+    [data-variant="midnight"] .header-inner {
+        padding: 10px 12px;
+        border-radius: 999px;
+        gap: 12px;
+    }
+}

@@ -160,6 +160,56 @@
     background: color-mix(in srgb, var(--surface-2) 76%, transparent);
 }
 
+[data-variant="cockpit"] .dropdown-trigger {
+    border-color: #263756;
+    background: linear-gradient(180deg, #1b2a45, #131e34);
+}
+
+[data-variant="cockpit"] .dropdown-trigger:hover {
+    border-color: rgba(79, 140, 255, 0.55);
+    background: linear-gradient(180deg, #203152, #152239);
+    box-shadow: 0 6px 20px rgba(34, 211, 238, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-variant="cockpit"] .dropdown-trigger.is-open {
+    border-color: rgba(34, 211, 238, 0.6);
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-variant="cockpit"] .dropdown-chevron {
+    border-radius: 6px;
+    background: rgba(34, 211, 238, 0.12);
+    color: #67e8f9;
+}
+
+[data-variant="cockpit"] .dropdown-menu {
+    border-radius: 11px;
+    border-color: #263756;
+    background:
+        linear-gradient(180deg, rgba(79, 140, 255, 0.09), transparent 120px),
+        linear-gradient(180deg, #16223a, #0f1728);
+}
+
+[data-variant="cockpit"] .dropdown-option {
+    border-radius: 7px;
+}
+
+[data-variant="cockpit"] .dropdown-option:hover,
+[data-variant="cockpit"] .dropdown-option.is-active {
+    background: rgba(79, 140, 255, 0.13);
+}
+
+[data-variant="cockpit"] .dropdown-option[aria-selected="true"] {
+    background: linear-gradient(90deg, rgba(79, 140, 255, 0.2), rgba(34, 211, 238, 0.06));
+    box-shadow: inset 2px 0 0 #22d3ee;
+}
+
+[data-variant="cockpit"] .dropdown-option[aria-selected="true"].is-active {
+    background: linear-gradient(90deg, rgba(79, 140, 255, 0.28), rgba(34, 211, 238, 0.1));
+}
+
 @media (max-width: 860px) {
     [data-variant="cockpit"] .app-header {
         position: sticky;

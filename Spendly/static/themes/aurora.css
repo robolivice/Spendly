@@ -1,0 +1,360 @@
+[data-variant="aurora"] {
+    --bg: #071019;
+    --surface: #0c1924;
+    --surface-2: #122534;
+    --border: #1d3547;
+    --text: #eaf6fb;
+    --muted: #94adbd;
+    --accent: #7be0c3;
+    --accent-2: #8e9cff;
+    --accent-contrast: #04120f;
+    --over-contrast: #2a0d14;
+    --ok: #6ee7a8;
+    --warn: #f4d06f;
+    --over: #ff8fa3;
+    --ok-fill: #38b982;
+    --warn-fill: #d7a83c;
+    --over-fill: #e05c74;
+    --chart-track: rgba(123, 224, 195, 0.12);
+    --chart-grid: rgba(123, 224, 195, 0.09);
+    --cat-food: #f4d06f;
+    --cat-transport: #7be0c3;
+    --cat-shopping: #a9b3ff;
+    --cat-bills: #ff8fa3;
+    --cat-other: #94adbd;
+    --radius: 18px;
+    --radius-sm: 12px;
+    --card-pad: 22px;
+    --shadow: 0 24px 60px rgba(2, 10, 18, 0.45);
+    --shadow-sm: 0 6px 18px rgba(2, 10, 18, 0.3);
+    --max-width: 1200px;
+    --font: "Avenir Next", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+[data-variant="aurora"] body {
+    background:
+        radial-gradient(1100px 700px at 8% -20%, rgba(123, 224, 195, 0.24), transparent 62%),
+        radial-gradient(900px 600px at 95% 0%, rgba(142, 156, 255, 0.19), transparent 60%),
+        radial-gradient(800px 520px at 50% 112%, rgba(56, 189, 248, 0.12), transparent 66%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+[data-variant="aurora"] .app-header {
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    border-bottom-color: transparent;
+    backdrop-filter: blur(22px);
+}
+
+[data-variant="aurora"] .app-header::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 55%, transparent), color-mix(in srgb, var(--accent-2) 45%, transparent), transparent);
+}
+
+[data-variant="aurora"] .header-inner {
+    padding: 15px 24px;
+}
+
+[data-variant="aurora"] .brand {
+    font-size: 1.04rem;
+    letter-spacing: -0.02em;
+}
+
+[data-variant="aurora"] .brand-mark {
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-contrast);
+    box-shadow: 0 0 28px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+[data-variant="aurora"] .nav-link {
+    border-radius: 10px;
+    font-size: 0.84rem;
+}
+
+[data-variant="aurora"] .nav-link.active {
+    background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent-2) 10%, transparent));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent);
+    color: var(--text);
+}
+
+[data-variant="aurora"] .select,
+[data-variant="aurora"] .icon-btn,
+[data-variant="aurora"] input,
+[data-variant="aurora"] select,
+[data-variant="aurora"] textarea {
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+[data-variant="aurora"] .select {
+    background-color: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+[data-variant="aurora"] .page-container {
+    padding-top: 42px;
+}
+
+[data-variant="aurora"] .page-head h1 {
+    font-size: clamp(2rem, 4vw, 2.85rem);
+    letter-spacing: -0.045em;
+}
+
+[data-variant="aurora"] .page-sub {
+    font-size: 0.9rem;
+}
+
+[data-variant="aurora"] .eyebrow {
+    color: var(--accent);
+    font-size: 0.67rem;
+    letter-spacing: 0.21em;
+}
+
+[data-variant="aurora"] .card {
+    background: linear-gradient(160deg, color-mix(in srgb, var(--surface) 93%, white), var(--surface));
+    border-color: var(--border);
+    box-shadow: var(--shadow);
+}
+
+[data-variant="aurora"] .card-head h2 {
+    letter-spacing: -0.02em;
+}
+
+[data-variant="aurora"] .hero-card {
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+    background:
+        radial-gradient(700px 380px at 12% 0%, rgba(123, 224, 195, 0.2), transparent 62%),
+        radial-gradient(600px 360px at 96% 102%, rgba(142, 156, 255, 0.18), transparent 62%),
+        linear-gradient(160deg, color-mix(in srgb, var(--surface) 93%, white), var(--surface));
+}
+
+[data-variant="aurora"] .hero-amount {
+    background: linear-gradient(100deg, var(--text) 18%, var(--accent) 58%, var(--accent-2) 96%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 24px color-mix(in srgb, var(--accent) 18%, transparent));
+}
+
+[data-variant="aurora"] .progress {
+    height: 7px;
+    background: color-mix(in srgb, var(--accent) 11%, transparent);
+}
+
+[data-variant="aurora"] .badge {
+    border-radius: 6px;
+}
+
+[data-variant="aurora"] .status-pill {
+    border-radius: 7px;
+}
+
+[data-variant="aurora"] .btn {
+    border-radius: 10px;
+}
+
+[data-variant="aurora"] .btn-primary {
+    background: linear-gradient(115deg, var(--accent), var(--accent-2));
+    color: var(--accent-contrast);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+[data-variant="aurora"] .btn-primary:hover {
+    opacity: 0.95;
+}
+
+[data-variant="aurora"] .btn-ghost {
+    background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
+
+[data-variant="aurora"] .period-bar {
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    backdrop-filter: blur(16px);
+}
+
+[data-variant="aurora"] .chip {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
+
+[data-variant="aurora"] .txn-row {
+    border-top-color: color-mix(in srgb, var(--accent) 10%, var(--border));
+}
+
+[data-variant="aurora"] .txn-row:hover {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+[data-variant="aurora"] .txn-icon {
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--cat) 16%, transparent);
+}
+
+[data-variant="aurora"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+[data-variant="aurora"] .history-table th {
+    color: color-mix(in srgb, var(--accent) 78%, var(--text));
+}
+
+[data-variant="aurora"] .profile-card.is-active {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 26%, transparent), 0 24px 60px color-mix(in srgb, var(--accent) 13%, transparent);
+}
+
+[data-variant="aurora"] .avatar {
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-contrast);
+}
+
+[data-variant="aurora"] .settings-icon {
+    border-radius: 13px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), color-mix(in srgb, var(--accent-2) 13%, transparent));
+    color: var(--accent);
+}
+
+[data-variant="aurora"] .theme-switch {
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-2) 72%, transparent);
+}
+
+[data-variant="aurora"] .theme-choice {
+    border-radius: 9px;
+}
+
+[data-variant="aurora"] .theme-choice.active {
+    background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent-2) 11%, transparent));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+[data-variant="aurora"] .dialog {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 40px 110px rgba(0, 0, 0, 0.55);
+}
+
+[data-variant="aurora"] .toast {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(18px);
+}
+
+[data-variant="aurora"] .mobile-nav {
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    border-top-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+}
+
+[data-variant="aurora"] .mobile-nav-link {
+    border-radius: 10px;
+}
+
+[data-variant="aurora"] .app-footer {
+    border-top-color: color-mix(in srgb, var(--accent) 14%, var(--border));
+}
+
+@media (max-width: 640px) {
+    [data-variant="aurora"] .page-head h1 {
+        font-size: 1.9rem;
+    }
+}
+
+[data-variant="aurora"] .theme-gallery-link {
+    border-radius: 12px;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="aurora"] .theme-gallery-link.is-active {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+    background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 16%, transparent), color-mix(in srgb, var(--accent-2) 11%, transparent));
+    color: var(--text);
+}
+
+[data-variant="aurora"] .theme-picker {
+    border-color: color-mix(in srgb, var(--accent) 16%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+}
+
+[data-variant="aurora"] .dropdown-trigger {
+    border-radius: 10px;
+    border-color: color-mix(in srgb, var(--accent) 14%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+    box-shadow: none;
+}
+
+[data-variant="aurora"] .dropdown-trigger:hover {
+    border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+[data-variant="aurora"] .dropdown-trigger.is-open {
+    border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+[data-variant="aurora"] .dropdown-chevron {
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="aurora"] .dropdown-menu {
+    border-radius: 12px;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(24px);
+}
+
+[data-variant="aurora"] .dropdown-option {
+    border-radius: 8px;
+}
+
+[data-variant="aurora"] .theme-option {
+    border-color: color-mix(in srgb, var(--accent) 12%, var(--border));
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-2) 60%, transparent);
+}
+
+[data-variant="aurora"] .theme-option.is-selected,
+[data-variant="aurora"] .theme-option:has(input:checked) {
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+    background: linear-gradient(140deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), color-mix(in srgb, var(--accent-2) 7%, var(--surface)));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+[data-variant="aurora"] .theme-swatch {
+    border-radius: 8px;
+}
+
+[data-variant="aurora"] .nav-btn {
+    border-radius: 9px;
+}
+
+[data-variant="aurora"] .calendar {
+    border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    backdrop-filter: blur(24px);
+}
+
+[data-variant="aurora"] .cal-day {
+    border-radius: 9px;
+}
+
+[data-variant="aurora"] .cal-day.selected {
+    box-shadow: 0 0 18px color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+[data-variant="aurora"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}

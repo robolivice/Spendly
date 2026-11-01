@@ -1,0 +1,373 @@
+[data-variant="ember"] {
+    --bg: #140f0c;
+    --surface: #1e1713;
+    --surface-2: #2a201a;
+    --border: #3e2d23;
+    --text: #f6ece2;
+    --muted: #b9a294;
+    --accent: #ff8a4c;
+    --accent-2: #ff4d3d;
+    --accent-contrast: #1b0e07;
+    --over-contrast: #2a0c08;
+    --ok: #8fd694;
+    --warn: #f2c14e;
+    --over: #ff6b5e;
+    --ok-fill: #4fa866;
+    --warn-fill: #d19a2e;
+    --over-fill: #e0483a;
+    --chart-track: rgba(255, 138, 76, 0.12);
+    --chart-grid: rgba(255, 138, 76, 0.09);
+    --cat-food: #ffb27a;
+    --cat-transport: #8fd694;
+    --cat-shopping: #d8b4fe;
+    --cat-bills: #ff6b5e;
+    --cat-other: #b9a294;
+    --radius: 16px;
+    --radius-sm: 10px;
+    --card-pad: 21px;
+    --shadow: 0 24px 60px rgba(0, 0, 0, 0.46);
+    --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.3);
+    --max-width: 1180px;
+    --font: "Segoe UI Variable", "Segoe UI", "Avenir Next", system-ui, sans-serif;
+}
+
+[data-variant="ember"] body {
+    background:
+        radial-gradient(900px 560px at 50% 112%, rgba(255, 77, 61, 0.17), transparent 66%),
+        radial-gradient(720px 480px at 102% -6%, rgba(255, 138, 76, 0.11), transparent 64%),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+[data-variant="ember"] .app-header {
+    top: 0;
+    padding: 14px 24px 0;
+    border: 0;
+    background:
+        radial-gradient(900px 560px at 50% 112%, rgba(255, 77, 61, 0.17), transparent 66%),
+        radial-gradient(720px 480px at 102% -6%, rgba(255, 138, 76, 0.11), transparent 64%),
+        var(--bg);
+    background-attachment: fixed;
+    backdrop-filter: none;
+}
+
+[data-variant="ember"] .header-inner {
+    padding: 12px 16px 12px 20px;
+    border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+    backdrop-filter: blur(20px) saturate(130%);
+    box-shadow: 0 18px 46px rgba(0, 0, 0, 0.46), 0 0 30px rgba(255, 138, 76, 0.1);
+}
+
+[data-variant="ember"] .brand {
+    font-size: 1.04rem;
+    letter-spacing: -0.02em;
+}
+
+[data-variant="ember"] .brand-mark {
+    border-radius: 12px;
+    background: radial-gradient(circle at 30% 24%, #ffb06e, #e24118 72%);
+    color: #1b0e07;
+    box-shadow: 0 0 26px rgba(255, 110, 60, 0.3);
+}
+
+[data-variant="ember"] .nav-link {
+    border-radius: 8px;
+    font-size: 0.84rem;
+}
+
+[data-variant="ember"] .nav-link.active {
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .select,
+[data-variant="ember"] .icon-btn,
+[data-variant="ember"] input,
+[data-variant="ember"] select,
+[data-variant="ember"] textarea {
+    border-radius: 9px;
+    background: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+
+[data-variant="ember"] .select {
+    background-color: color-mix(in srgb, var(--surface-2) 80%, transparent);
+}
+
+[data-variant="ember"] .page-container {
+    padding-top: 40px;
+}
+
+[data-variant="ember"] .page-head h1 {
+    font-size: clamp(2rem, 4vw, 2.85rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+[data-variant="ember"] .page-sub {
+    font-size: 0.9rem;
+}
+
+[data-variant="ember"] .eyebrow {
+    color: var(--accent);
+    font-size: 0.67rem;
+    letter-spacing: 0.19em;
+}
+
+[data-variant="ember"] .eyebrow::before {
+    content: "●";
+    margin-right: 7px;
+    color: var(--accent-2);
+    font-size: 0.62em;
+    vertical-align: 2px;
+}
+
+[data-variant="ember"] .card {
+    border-color: color-mix(in srgb, var(--accent) 10%, var(--border));
+    background: linear-gradient(160deg, color-mix(in srgb, var(--surface) 96%, white), var(--surface));
+    box-shadow: var(--shadow);
+}
+
+[data-variant="ember"] .hero-card {
+    border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+    background:
+        radial-gradient(620px 330px at 0% 102%, rgba(255, 77, 61, 0.18), transparent 66%),
+        radial-gradient(520px 290px at 100% 0%, rgba(255, 138, 76, 0.13), transparent 62%),
+        linear-gradient(160deg, color-mix(in srgb, var(--surface) 96%, white), var(--surface));
+}
+
+[data-variant="ember"] .hero-amount {
+    background: linear-gradient(100deg, var(--text) 12%, #ffb27a 56%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 2px 22px rgba(255, 110, 60, 0.16));
+}
+
+[data-variant="ember"] .progress {
+    height: 9px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+[data-variant="ember"] .badge {
+    border-radius: 6px;
+}
+
+[data-variant="ember"] .status-pill {
+    border-radius: 7px;
+}
+
+[data-variant="ember"] .btn {
+    border-radius: 9px;
+}
+
+[data-variant="ember"] .btn-primary {
+    background: linear-gradient(115deg, #ff9a55, #e24118);
+    color: #210d06;
+    box-shadow: 0 10px 26px rgba(226, 65, 24, 0.28);
+}
+
+[data-variant="ember"] .btn-primary:hover {
+    opacity: 0.96;
+}
+
+[data-variant="ember"] .btn-ghost {
+    background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+}
+
+[data-variant="ember"] .period-bar {
+    background: color-mix(in srgb, var(--surface) 84%, transparent);
+}
+
+[data-variant="ember"] .chip {
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface-2) 76%, transparent);
+}
+
+[data-variant="ember"] .txn-row {
+    border-top-color: color-mix(in srgb, var(--accent) 9%, var(--border));
+}
+
+[data-variant="ember"] .txn-row:hover {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+[data-variant="ember"] .txn-icon {
+    border-radius: 11px;
+    background: color-mix(in srgb, var(--cat) 15%, transparent);
+}
+
+[data-variant="ember"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+[data-variant="ember"] .history-table th {
+    color: color-mix(in srgb, var(--accent) 74%, var(--text));
+}
+
+[data-variant="ember"] .profile-card.is-active {
+    border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 24%, transparent), 0 22px 55px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+[data-variant="ember"] .avatar {
+    border-radius: 13px;
+    background: linear-gradient(135deg, #ffb06e, #d9361a);
+    color: #210d06;
+}
+
+[data-variant="ember"] .settings-icon {
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .theme-switch {
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--surface-2) 76%, transparent);
+}
+
+[data-variant="ember"] .theme-choice {
+    border-radius: 9px;
+}
+
+[data-variant="ember"] .theme-choice.active {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .dialog {
+    border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+    background: color-mix(in srgb, var(--surface) 97%, transparent);
+    box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 90, 40, 0.08);
+}
+
+[data-variant="ember"] .toast {
+    border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+}
+
+[data-variant="ember"] .mobile-nav {
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    border-top-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+}
+
+[data-variant="ember"] .mobile-nav-link {
+    border-radius: 9px;
+}
+
+[data-variant="ember"] .app-footer {
+    border-top-color: color-mix(in srgb, var(--accent) 14%, var(--border));
+}
+
+@media (max-width: 640px) {
+    [data-variant="ember"] .page-head h1 {
+        font-size: 1.9rem;
+    }
+}
+
+[data-variant="ember"] .theme-gallery-link {
+    border-radius: 10px;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 68%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .theme-gallery-link.is-active {
+    border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .theme-picker {
+    border-color: color-mix(in srgb, var(--accent) 15%, var(--border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface-2) 68%, transparent);
+}
+
+[data-variant="ember"] .dropdown-trigger {
+    border-radius: 9px;
+    border-color: color-mix(in srgb, var(--accent) 13%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+    box-shadow: none;
+}
+
+[data-variant="ember"] .dropdown-trigger:hover {
+    border-color: color-mix(in srgb, var(--accent) 36%, var(--border));
+    background: color-mix(in srgb, var(--surface-2) 86%, transparent);
+    box-shadow: 0 8px 24px rgba(255, 110, 60, 0.1);
+}
+
+[data-variant="ember"] .dropdown-trigger.is-open {
+    border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 13%, transparent);
+}
+
+[data-variant="ember"] .dropdown-chevron {
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 13%, transparent);
+    color: var(--accent);
+}
+
+[data-variant="ember"] .dropdown-menu {
+    border-radius: 10px;
+    border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    box-shadow: 0 30px 74px rgba(0, 0, 0, 0.6);
+}
+
+[data-variant="ember"] .dropdown-option {
+    border-radius: 7px;
+}
+
+[data-variant="ember"] .theme-option {
+    border-color: color-mix(in srgb, var(--accent) 12%, var(--border));
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--surface-2) 66%, transparent);
+}
+
+[data-variant="ember"] .theme-option.is-selected,
+[data-variant="ember"] .theme-option:has(input:checked) {
+    border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+[data-variant="ember"] .theme-swatch {
+    border-radius: 7px;
+}
+
+[data-variant="ember"] .nav-btn {
+    border-radius: 8px;
+}
+
+[data-variant="ember"] .calendar {
+    border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+}
+
+[data-variant="ember"] .cal-day {
+    border-radius: 9px;
+}
+
+[data-variant="ember"] .cal-day.selected {
+    box-shadow: 0 0 18px rgba(255, 110, 60, 0.34);
+}
+
+[data-variant="ember"] .stat-card {
+    border-top: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+@media (max-width: 860px) {
+    [data-variant="ember"] .app-header {
+        padding: 8px 10px 0;
+    }
+
+    [data-variant="ember"] .header-inner {
+        padding: 10px 12px;
+        border-radius: 999px;
+        gap: 12px;
+    }
+}

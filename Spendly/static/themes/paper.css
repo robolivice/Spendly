@@ -1,0 +1,399 @@
+[data-variant="paper"] {
+    --bg: #f4edde;
+    --surface: #fcf8ee;
+    --surface-2: #f0e6d2;
+    --border: #d8c9ad;
+    --text: #2b251d;
+    --muted: #675d4b;
+    --accent: #2f5d4c;
+    --accent-2: #9b3f2f;
+    --accent-contrast: #fffdf6;
+    --over-contrast: #fff8f2;
+    --ok: #2f6b4f;
+    --warn: #7c5310;
+    --over: #a23225;
+    --ok-fill: #3d7a58;
+    --warn-fill: #bd8624;
+    --over-fill: #b63d2d;
+    --chart-track: rgba(43, 37, 29, 0.1);
+    --chart-grid: rgba(43, 37, 29, 0.08);
+    --cat-food: #8a4b00;
+    --cat-transport: #1f5d52;
+    --cat-shopping: #5d4a8c;
+    --cat-bills: #8f2b20;
+    --cat-other: #5d5547;
+    --radius: 6px;
+    --radius-sm: 4px;
+    --card-pad: 22px;
+    --shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset, 0 10px 26px rgba(94, 73, 40, 0.08);
+    --shadow-sm: 0 4px 12px rgba(94, 73, 40, 0.07);
+    --max-width: 1140px;
+    --font: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    --font-mono: "Cascadia Mono", "Consolas", "Courier New", monospace;
+}
+
+[data-variant="paper"] body {
+    background:
+        radial-gradient(900px 520px at 15% -10%, rgba(255, 255, 255, 0.5), transparent 62%),
+        repeating-linear-gradient(180deg, transparent 0 31px, color-mix(in srgb, var(--text) 5%, transparent) 31px 32px),
+        var(--bg);
+    background-attachment: fixed;
+}
+
+[data-variant="paper"] .app-header {
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(12px);
+}
+
+[data-variant="paper"] .header-inner {
+    padding: 14px 24px;
+}
+
+[data-variant="paper"] .brand {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    letter-spacing: 0.015em;
+}
+
+[data-variant="paper"] .brand-mark {
+    border-radius: 50%;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    box-shadow: none;
+    transform: rotate(-4deg);
+}
+
+[data-variant="paper"] .nav-link {
+    padding: 7px 10px 6px;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    font-family: var(--font-mono);
+    font-size: 0.69rem;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .nav-link:hover {
+    background: transparent;
+    border-bottom-color: var(--border);
+    color: var(--text);
+}
+
+[data-variant="paper"] .nav-link.active {
+    background: transparent;
+    border-bottom-color: var(--accent-2);
+    color: var(--accent);
+}
+
+[data-variant="paper"] .select,
+[data-variant="paper"] .icon-btn,
+[data-variant="paper"] input,
+[data-variant="paper"] select,
+[data-variant="paper"] textarea {
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--surface) 78%, var(--bg));
+}
+
+[data-variant="paper"] .select {
+    background-color: color-mix(in srgb, var(--surface) 78%, var(--bg));
+}
+
+[data-variant="paper"] .btn {
+    min-height: 38px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .btn-primary {
+    box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent-2) 55%, transparent);
+}
+
+[data-variant="paper"] .btn-ghost {
+    background: transparent;
+}
+
+[data-variant="paper"] .page-container {
+    padding-top: 38px;
+}
+
+[data-variant="paper"] .page-head h1 {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 3.8vw, 2.85rem);
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+[data-variant="paper"] .page-sub {
+    font-size: 0.89rem;
+}
+
+[data-variant="paper"] .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.63rem;
+    letter-spacing: 0.23em;
+}
+
+[data-variant="paper"] .eyebrow::before {
+    content: "— ";
+    opacity: 0.7;
+}
+
+[data-variant="paper"] .card {
+    border-radius: 5px;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 96%, white), var(--surface));
+}
+
+[data-variant="paper"] .card-head h2,
+[data-variant="paper"] .settings-card h2,
+[data-variant="paper"] .profile-card h2 {
+    font-family: var(--font-display);
+    letter-spacing: 0.005em;
+}
+
+[data-variant="paper"] .hero-card {
+    border-left: 3px solid var(--accent-2);
+}
+
+[data-variant="paper"] .hero-amount,
+[data-variant="paper"] .stat-value,
+[data-variant="paper"] .legend-value,
+[data-variant="paper"] .txn-amount,
+[data-variant="paper"] .period-label {
+    font-family: var(--font-mono);
+    letter-spacing: -0.04em;
+}
+
+[data-variant="paper"] .hero-amount {
+    font-size: clamp(2.2rem, 4.8vw, 3.1rem);
+    font-weight: 700;
+}
+
+[data-variant="paper"] .card-kicker,
+[data-variant="paper"] .stat-label,
+[data-variant="paper"] .field label {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .badge {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    background: var(--surface-2);
+}
+
+[data-variant="paper"] .badge-current {
+    border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+}
+
+[data-variant="paper"] .status-pill {
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .progress {
+    height: 8px;
+    border-radius: 2px;
+    background: repeating-linear-gradient(90deg, var(--chart-track) 0 7px, transparent 7px 10px);
+}
+
+[data-variant="paper"] .progress-fill {
+    border-radius: 1px;
+}
+
+[data-variant="paper"] .period-bar {
+    border-top: 2px solid var(--accent-2);
+    border-radius: 4px;
+}
+
+[data-variant="paper"] .chip {
+    border-radius: 3px;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+}
+
+[data-variant="paper"] .chip:hover {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+[data-variant="paper"] .txn-row {
+    border-top: 1px dashed var(--border);
+}
+
+[data-variant="paper"] .txn-row:hover {
+    background: color-mix(in srgb, var(--accent) 4%, transparent);
+}
+
+[data-variant="paper"] .txn-icon {
+    border: 1px solid color-mix(in srgb, var(--cat) 28%, transparent);
+    border-radius: 4px;
+    background: transparent;
+}
+
+[data-variant="paper"] .stat-card {
+    border-top: 2px solid var(--accent);
+}
+
+[data-variant="paper"] .history-table th {
+    font-family: var(--font-mono);
+    letter-spacing: 0.09em;
+}
+
+[data-variant="paper"] .profile-card.is-active {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+}
+
+[data-variant="paper"] .avatar {
+    border-radius: 4px;
+    background: var(--accent);
+    box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent-2) 45%, transparent);
+}
+
+[data-variant="paper"] .settings-icon {
+    border: 1px solid var(--accent);
+    border-radius: 50%;
+    background: transparent;
+}
+
+[data-variant="paper"] .theme-switch {
+    border-radius: 4px;
+}
+
+[data-variant="paper"] .theme-choice {
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .dialog {
+    border-radius: 6px;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.45), 0 0 0 6px color-mix(in srgb, var(--surface) 55%, transparent);
+}
+
+[data-variant="paper"] .toast {
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+}
+
+[data-variant="paper"] .mobile-nav {
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+
+[data-variant="paper"] .mobile-nav-link {
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+[data-variant="paper"] .app-footer {
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+}
+
+@media (max-width: 640px) {
+    [data-variant="paper"] .page-head h1 {
+        font-size: 1.85rem;
+    }
+}
+
+[data-variant="paper"] .theme-gallery-link,
+[data-variant="paper"] .theme-picker,
+[data-variant="paper"] .dropdown-trigger,
+[data-variant="paper"] .theme-option {
+    border-radius: 4px;
+}
+
+[data-variant="paper"] .theme-gallery-link.is-active {
+    border-color: var(--accent-2);
+    background: transparent;
+    color: var(--accent-2);
+}
+
+[data-variant="paper"] .theme-picker,
+[data-variant="paper"] .dropdown-trigger {
+    background: color-mix(in srgb, var(--surface) 78%, var(--bg));
+}
+
+[data-variant="paper"] .dropdown-trigger:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: var(--surface);
+    box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent-2) 20%, transparent);
+}
+
+[data-variant="paper"] .dropdown-trigger.is-open {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+[data-variant="paper"] .dropdown-chevron {
+    border-radius: 2px;
+    background: transparent;
+    color: var(--accent);
+}
+
+[data-variant="paper"] .dropdown-menu {
+    border-radius: 4px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+
+[data-variant="paper"] .dropdown-option {
+    border-radius: 2px;
+}
+
+[data-variant="paper"] .theme-option {
+    background: color-mix(in srgb, var(--surface) 62%, transparent);
+}
+
+[data-variant="paper"] .theme-option.is-selected,
+[data-variant="paper"] .theme-option:has(input:checked) {
+    border-color: var(--accent-2);
+    box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent-2) 24%, transparent);
+}
+
+[data-variant="paper"] .theme-swatch {
+    border-radius: 2px;
+}
+
+[data-variant="paper"] .theme-copy strong {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+}
+
+[data-variant="paper"] .nav-btn {
+    border-radius: 3px;
+}
+
+[data-variant="paper"] .calendar {
+    border-radius: 6px;
+}
+
+[data-variant="paper"] .cal-day {
+    border-radius: 4px;
+}
+
+[data-variant="paper"] .cal-day.selected {
+    box-shadow: 2px 2px 0 color-mix(in srgb, var(--accent-2) 35%, transparent);
+}
+
+[data-variant="paper"] .stat-card {
+    border-top: 2px solid var(--accent-2);
+}

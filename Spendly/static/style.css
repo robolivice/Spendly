@@ -198,8 +198,6 @@ svg {
     text-decoration: underline;
 }
 
-/* Shell ------------------------------------------------------------------ */
-
 .app-header {
     position: sticky;
     top: 0;
@@ -328,6 +326,37 @@ svg {
     box-shadow: none;
 }
 
+.theme-gallery-link {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.theme-gallery-link:hover {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+    color: var(--text);
+}
+
+.theme-gallery-link.is-active {
+    border-color: color-mix(in srgb, var(--accent) 46%, var(--border));
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+    color: var(--accent);
+}
+
+.theme-gallery-link .icon {
+    width: 18px;
+    height: 18px;
+}
+
 .theme-picker {
     display: inline-flex;
     align-items: center;
@@ -343,11 +372,6 @@ svg {
 .theme-picker:focus-within {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
-}
-
-.theme-picker-icon {
-    width: 16px;
-    height: 16px;
 }
 
 .theme-select {
@@ -402,8 +426,6 @@ svg {
     width: 20px;
     height: 20px;
 }
-
-/* Page ------------------------------------------------------------------- */
 
 .app-main {
     min-width: 0;
@@ -489,8 +511,6 @@ svg {
     font-weight: 750;
     letter-spacing: -0.03em;
 }
-
-/* Cards and common controls ----------------------------------------------- */
 
 .card {
     min-width: 0;
@@ -590,6 +610,17 @@ textarea {
     font-size: 0.9rem;
 }
 
+select {
+    appearance: none;
+    padding-right: 34px;
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: calc(100% - 16px) 52%, calc(100% - 11px) 52%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+}
+
 input::placeholder,
 textarea::placeholder {
     color: var(--muted);
@@ -615,6 +646,398 @@ input[type="checkbox"] {
 select option {
     background: var(--surface);
     color: var(--text);
+}
+
+.dropdown {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+.dropdown-native {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    clip-path: inset(50%) !important;
+    overflow: hidden !important;
+    background: none !important;
+}
+
+.dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 40px;
+    margin: 0;
+    padding: 7px 9px 7px 12px;
+    border: 1px solid color-mix(in srgb, var(--border) 92%, transparent);
+    border-radius: 10px;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 84%, white 16%), var(--surface-2));
+    color: var(--text);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 550;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.dropdown-trigger:hover {
+    border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--surface-2) 78%, white 22%), var(--surface-2));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
+.dropdown-trigger.is-open {
+    border-color: color-mix(in srgb, var(--accent) 62%, var(--border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.dropdown-trigger:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+    outline-offset: 2px;
+}
+
+.dropdown-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.dropdown-value-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dropdown-chevron {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    color: var(--muted);
+    transition: transform 0.18s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.dropdown-chevron svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dropdown-trigger:hover .dropdown-chevron,
+.dropdown-trigger.is-open .dropdown-chevron {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 17%, transparent);
+}
+
+.dropdown-trigger.is-open .dropdown-chevron {
+    transform: rotate(180deg);
+}
+
+.field .dropdown-trigger {
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 400;
+}
+
+.year-form .dropdown-trigger {
+    min-height: 36px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-size: 0.84rem;
+}
+
+.dropdown-menu {
+    position: fixed;
+    z-index: 140;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 180px;
+    max-width: min(440px, calc(100vw - 20px));
+    max-height: min(320px, 64vh);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 6px;
+    border: 1px solid color-mix(in srgb, var(--border) 96%, transparent);
+    border-radius: 13px;
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--surface) 94%, white 6%), var(--surface));
+    color: var(--text);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px) saturate(135%);
+    animation: dropdown-in 0.14s ease-out;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--accent) 34%, transparent) transparent;
+}
+
+.dropdown-menu[hidden] {
+    display: none;
+}
+
+.dropdown-menu::-webkit-scrollbar {
+    width: 9px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 30%, transparent) padding-box;
+}
+
+@keyframes dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.985);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.dropdown-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dropdown-group + .dropdown-group {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+}
+
+.dropdown-group-label {
+    padding: 6px 10px 3px;
+    color: var(--muted);
+    font-size: 0.64rem;
+    font-weight: 750;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 400;
+    line-height: 1.35;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease;
+}
+
+.dropdown-option:hover,
+.dropdown-option.is-active {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.dropdown-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--accent) 11%, transparent);
+    color: var(--text);
+    font-weight: 620;
+}
+
+.dropdown-option[aria-selected="true"].is-active {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.dropdown-option[aria-disabled="true"] {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.dropdown-option[aria-disabled="true"]:hover {
+    background: transparent;
+}
+
+.dropdown-option-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.dropdown-check {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--accent);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+}
+
+.dropdown-check svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.dropdown-option[aria-selected="true"] .dropdown-check {
+    opacity: 1;
+}
+
+.dropdown-dot {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--muted);
+}
+
+.dropdown-option .dropdown-dot {
+    width: 11px;
+    height: 11px;
+}
+
+.dropdown-dot--cat {
+    border-radius: 3px;
+}
+
+.dropdown-dot--food {
+    background: var(--cat-food);
+}
+
+.dropdown-dot--transport {
+    background: var(--cat-transport);
+}
+
+.dropdown-dot--shopping {
+    background: var(--cat-shopping);
+}
+
+.dropdown-dot--bills {
+    background: var(--cat-bills);
+}
+
+.dropdown-dot--other {
+    background: var(--cat-other);
+}
+
+.dropdown-dot--theme {
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+}
+
+.dropdown-dot--fintech {
+    background: linear-gradient(135deg, #0a0c12 38%, #7c9cff);
+}
+
+.dropdown-dot--cockpit {
+    background: linear-gradient(135deg, #0a0f1c 28%, #4f8cff 62%, #22d3ee);
+}
+
+.dropdown-dot--saas {
+    background: linear-gradient(135deg, #f6f8fd 28%, #4058d8);
+}
+
+.dropdown-dot--glass {
+    background: linear-gradient(135deg, #07070f 28%, #b16cff 64%, #22d3ee);
+}
+
+.dropdown-dot--paper {
+    background: linear-gradient(135deg, #f4edde 34%, #2f5d4c 70%, #9b3f2f);
+}
+
+.dropdown-dot--brutal {
+    background: linear-gradient(135deg, #f6f1e7 34%, #ffd60a 34% 64%, #111111 64%);
+}
+
+.dropdown-dot--midnight {
+    background: linear-gradient(135deg, #0a0d12 36%, #b58a3c 68%, #f7e4ae);
+}
+
+.dropdown-dot--aurora {
+    background: linear-gradient(135deg, #071019 30%, #7be0c3 66%, #8e9cff);
+}
+
+.dropdown-dot--ember {
+    background: linear-gradient(135deg, #140f0c 32%, #ff8a4c 70%, #ff4d3d);
+}
+
+.dropdown-dot--clay {
+    background: linear-gradient(135deg, #ece0cf 34%, #98502f 70%, #6f7d58);
+}
+
+[data-variant] .theme-picker .dropdown {
+    flex: 1 1 auto;
+    width: auto;
+    height: 100%;
+}
+
+[data-variant] .theme-picker .dropdown-trigger {
+    min-height: 0;
+    height: 100%;
+    padding: 0 2px 0 0;
+    border-color: transparent;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    gap: 4px;
+    font-size: 0.8rem;
+    font-weight: 650;
+}
+
+[data-variant] .theme-picker .dropdown-trigger:hover,
+[data-variant] .theme-picker .dropdown-trigger.is-open {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+[data-variant] .theme-picker .dropdown-trigger:focus-visible {
+    outline: none;
+}
+
+[data-variant] .theme-picker .dropdown-value {
+    gap: 6px;
+}
+
+[data-variant] .theme-picker .dropdown-value-text {
+    max-width: 96px;
+}
+
+[data-variant] .theme-picker .dropdown-chevron {
+    width: 18px;
+    height: 18px;
+    background: transparent;
+}
+
+[data-variant] .theme-picker .dropdown-trigger:hover .dropdown-chevron,
+[data-variant] .theme-picker .dropdown-trigger.is-open .dropdown-chevron {
+    background: transparent;
 }
 
 .date-picker {
@@ -682,8 +1105,6 @@ select option {
 .setup-form {
     margin-top: 16px;
 }
-
-/* Badges and status ------------------------------------------------------ */
 
 .badge {
     display: inline-flex;
@@ -766,8 +1187,6 @@ select option {
 .cat-other {
     color: var(--cat-other);
 }
-
-/* Period bar ------------------------------------------------------------- */
 
 .period-bar {
     margin-bottom: 16px;
@@ -882,8 +1301,6 @@ select option {
 .save-range-card {
     margin-bottom: 16px;
 }
-
-/* Dashboard grid and hero ------------------------------------------------ */
 
 .dashboard-grid {
     display: grid;
@@ -1154,8 +1571,6 @@ select option {
     margin-bottom: 10px;
 }
 
-/* Tables ----------------------------------------------------------------- */
-
 .table-wrap {
     position: relative;
     overflow-x: auto;
@@ -1255,8 +1670,6 @@ tbody tr:last-child td {
     font-size: 0.83rem;
 }
 
-/* History ---------------------------------------------------------------- */
-
 .summary-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1284,8 +1697,6 @@ tbody tr:last-child td {
 .history-card .card-head {
     align-items: center;
 }
-
-/* Settings --------------------------------------------------------------- */
 
 .settings-grid {
     display: grid;
@@ -1316,11 +1727,26 @@ tbody tr:last-child td {
 
 .appearance-card .card-head {
     align-items: center;
+    flex-wrap: wrap;
+    row-gap: 8px;
+}
+
+.appearance-head-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.appearance-link {
+    font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 .theme-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
 }
 
@@ -1368,22 +1794,6 @@ tbody tr:last-child td {
     border-radius: 8px;
 }
 
-.theme-swatch--fintech {
-    background: linear-gradient(135deg, #0a0c12 42%, #7c9cff);
-}
-
-.theme-swatch--cockpit {
-    background: linear-gradient(135deg, #0a0f1c 42%, #4f8cff 72%, #22d3ee);
-}
-
-.theme-swatch--saas {
-    background: linear-gradient(135deg, #ffffff 42%, #4058d8 72%, #0f9488);
-}
-
-.theme-swatch--glass {
-    background: linear-gradient(135deg, #17102b 30%, #b16cff 65%, #22d3ee);
-}
-
 .theme-copy {
     display: flex;
     flex-direction: column;
@@ -1399,8 +1809,6 @@ tbody tr:last-child td {
     font-size: 0.7rem;
     line-height: 1.4;
 }
-
-/* Profiles --------------------------------------------------------------- */
 
 .profile-grid {
     display: grid;
@@ -1518,8 +1926,6 @@ tbody tr:last-child td {
     color: var(--muted);
     box-shadow: none;
 }
-
-/* Flash and dialogs ------------------------------------------------------ */
 
 .flash-stack {
     display: flex;
@@ -1667,8 +2073,6 @@ dialog h2 {
     margin-right: auto;
 }
 
-/* Responsive ------------------------------------------------------------- */
-
 @media (max-width: 1100px) {
     .span-8,
     .span-7,
@@ -1744,6 +2148,10 @@ dialog h2 {
     .theme-select {
         max-width: 132px;
     }
+
+    [data-variant] .theme-picker .dropdown-value-text {
+        max-width: 104px;
+    }
 }
 
 @media (max-width: 640px) {
@@ -1757,6 +2165,11 @@ dialog h2 {
 
     .header-actions {
         gap: 6px;
+    }
+
+    .theme-gallery-link {
+        width: 36px;
+        height: 36px;
     }
 
     .theme-picker {
@@ -1871,8 +2284,8 @@ dialog h2 {
         font-size: 0.74rem;
     }
 
-    .theme-picker-icon {
-        display: none;
+    [data-variant] .theme-picker .dropdown-value-text {
+        max-width: 100px;
     }
 }
 

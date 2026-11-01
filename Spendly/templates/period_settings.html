@@ -100,29 +100,19 @@
                 <h2>Appearance</h2>
                 <span class="muted">Pick a look. Your choice is saved in this browser.</span>
             </div>
-            <span class="badge">4 themes</span>
+            <div class="appearance-head-actions">
+                <a class="link appearance-link" href="{{ url_for('themes') }}">Open theme gallery</a>
+                <span class="badge">{{ themes|length }} themes</span>
+            </div>
         </div>
         <div class="theme-grid" role="radiogroup" aria-label="Theme">
+            {% for theme in themes %}
             <label class="theme-option">
-                <input type="radio" name="theme-choice" value="fintech">
-                <span class="theme-swatch theme-swatch--fintech" aria-hidden="true"></span>
-                <span class="theme-copy"><strong>Dark Fintech</strong><small>Layered ink surfaces and indigo accents.</small></span>
+                <input type="radio" name="theme-choice" value="{{ theme.id }}">
+                <span class="theme-swatch" style="background: {{ theme.swatch }}" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>{{ theme.name }}</strong><small>{{ theme.tagline }}</small></span>
             </label>
-            <label class="theme-option">
-                <input type="radio" name="theme-choice" value="cockpit">
-                <span class="theme-swatch theme-swatch--cockpit" aria-hidden="true"></span>
-                <span class="theme-copy"><strong>Budget Cockpit</strong><small>A sidebar cockpit with a dense telemetry grid.</small></span>
-            </label>
-            <label class="theme-option">
-                <input type="radio" name="theme-choice" value="saas">
-                <span class="theme-swatch theme-swatch--saas" aria-hidden="true"></span>
-                <span class="theme-copy"><strong>Light SaaS</strong><small>White cards, soft shadows, and airy spacing.</small></span>
-            </label>
-            <label class="theme-option">
-                <input type="radio" name="theme-choice" value="glass">
-                <span class="theme-swatch theme-swatch--glass" aria-hidden="true"></span>
-                <span class="theme-copy"><strong>Neon Glass</strong><small>Frosted panels with violet and cyan glow.</small></span>
-            </label>
+            {% endfor %}
         </div>
     </article>
 </section>

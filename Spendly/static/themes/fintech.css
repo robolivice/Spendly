@@ -32,10 +32,30 @@
         radial-gradient(900px 520px at 8% -12%, rgba(124, 156, 255, 0.16), transparent 62%),
         radial-gradient(760px 480px at 100% 0%, rgba(154, 108, 255, 0.11), transparent 58%),
         var(--bg);
+    background-attachment: fixed;
 }
 
 [data-variant="fintech"] .app-header {
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
+    top: 0;
+    padding: 14px 24px 0;
+    border: 0;
+    background:
+        radial-gradient(900px 520px at 8% -12%, rgba(124, 156, 255, 0.16), transparent 62%),
+        radial-gradient(760px 480px at 100% 0%, rgba(154, 108, 255, 0.11), transparent 58%),
+        var(--bg);
+    background-attachment: fixed;
+    backdrop-filter: none;
+}
+
+[data-variant="fintech"] .header-inner {
+    padding: 11px 14px 11px 18px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background:
+        linear-gradient(color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--surface) 88%, transparent)) padding-box,
+        linear-gradient(120deg, rgba(124, 156, 255, 0.55), rgba(154, 108, 255, 0.35), rgba(124, 156, 255, 0.12)) border-box;
+    backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35), 0 0 28px rgba(124, 156, 255, 0.1);
 }
 
 [data-variant="fintech"] .brand-mark {
@@ -80,4 +100,59 @@
 
 [data-variant="fintech"] .cal-day.selected {
     box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+[data-variant="fintech"] .dropdown-trigger {
+    border-color: #2a3142;
+    background: linear-gradient(180deg, #202636, #171c28);
+}
+
+[data-variant="fintech"] .dropdown-trigger:hover {
+    border-color: rgba(124, 156, 255, 0.46);
+    background: linear-gradient(180deg, #252c3e, #1a2030);
+    box-shadow: 0 6px 20px rgba(124, 156, 255, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-variant="fintech"] .dropdown-trigger.is-open {
+    border-color: rgba(124, 156, 255, 0.7);
+    box-shadow: 0 0 0 3px rgba(124, 156, 255, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-variant="fintech"] .dropdown-chevron {
+    background: rgba(124, 156, 255, 0.12);
+    color: #aebfff;
+}
+
+[data-variant="fintech"] .dropdown-menu {
+    border-color: #2d3548;
+    background:
+        radial-gradient(220px 100px at 8% 0%, rgba(124, 156, 255, 0.18), transparent 70%),
+        linear-gradient(180deg, #1b2130, #12151e);
+}
+
+[data-variant="fintech"] .dropdown-option:hover,
+[data-variant="fintech"] .dropdown-option.is-active {
+    background: rgba(124, 156, 255, 0.12);
+}
+
+[data-variant="fintech"] .dropdown-option[aria-selected="true"] {
+    background: linear-gradient(90deg, rgba(124, 156, 255, 0.18), rgba(154, 108, 255, 0.08));
+}
+
+[data-variant="fintech"] .dropdown-option[aria-selected="true"].is-active {
+    background: linear-gradient(90deg, rgba(124, 156, 255, 0.26), rgba(154, 108, 255, 0.12));
+}
+
+@media (max-width: 860px) {
+    [data-variant="fintech"] .app-header {
+        padding: 8px 10px 0;
+    }
+
+    [data-variant="fintech"] .header-inner {
+        padding: 10px 12px;
+        border-radius: 999px;
+        gap: 12px;
+    }
 }
