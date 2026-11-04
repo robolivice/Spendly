@@ -5,12 +5,30 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 
 import cycles
 import db
+import paths
+import settings
 import theme_catalog
 
-app = Flask(__name__)
-app.secret_key = os.environ.get("SPENDLY_SECRET_KEY", "spendly-development-key")
+app = Flask(
+    __name__,
+    template_folder=str(paths.resource_path("templates")),
+    static_folder=str(paths.resource_path("static")),
+)
+app.secret_key = os.environ.get("SPENDLY_SECRET_KEY") or settings.ensure_secret()
+app.config.update(
+    DEBUG=False,
+    TEMPLATES_AUTO_RELOAD=False,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+
+DESKTOP_MODE = bool(os.environ.get("SPENDLY_DESKTOP"))
 
 db.setup()
+
+
+@app.context_processor
+def inject_desktop():
+    return {"is_desktop": DESKTOP_MODE}
 
 
 @app.context_processor

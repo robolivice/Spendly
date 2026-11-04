@@ -1,0 +1,92 @@
+# Changelog
+
+All notable changes to Spendly are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [1.0.0] - 2026-11-05
+
+The first stable release of Spendly: a local-first expense tracker for the web
+and Windows, shipped with ten complete interface themes.
+
+**Downloads:** [Windows installer](https://github.com/robolivice/spendly/releases/download/v1.0.0/Spendly-1.0.0-Setup.exe) &middot; [Portable build](https://github.com/robolivice/spendly/releases/download/v1.0.0/Spendly-1.0.0-portable.zip)
+
+**Note:** The Windows binaries are unsigned, so SmartScreen may show an unknown publisher warning on other machines.
+
+### Added
+
+- **Multiple budget profiles.** Create, rename, switch between, and delete
+  profiles without sharing data between them.
+- **Flexible monthly cycles.** Set up a first period with any start and end
+  date, then let Spendly generate future periods from the cycle end day.
+  Month-end dates are handled correctly, including shorter months.
+- **Custom ranges and saved periods.** Browse any date range, save it as a
+  period, update an existing period, or adjust its dates. Overlapping ranges
+  are validated before they are saved.
+- **Budget limits and pacing.** Set an optional limit per period, inherit the
+  latest limit into new periods, and see spent, remaining, percentage used,
+  and On track / Near limit / Over limit status.
+- **Expense tracking.** Record a date, category, amount, and optional
+  description. Categories include Food, Transport, Shopping, Bills, and Other.
+  Sort the transaction table by date, category, amount, or description, and
+  delete mistakes from the same view.
+- **Spending history.** Review saved periods by year, compare spending against
+  limits, and see summary counts for saved periods, total spent, and periods
+  that finished over or near their limit.
+- **Ten complete themes.** Dark Fintech, Budget Cockpit, Light SaaS, Neon
+  Glass, Paper Ledger, Neo Brutal, Midnight Gold, Arctic Aurora, Ember, and
+  Desert Clay. Each theme changes layout, typography, color, and component
+  styling rather than only the accent color.
+- **Theme gallery.** Search and filter themes by name, style, mode, and shell,
+  preview desktop and mobile screenshots, and apply a theme from the gallery.
+  The selected theme is remembered across sessions.
+- **Responsive web app.** The Flask interface adapts to desktop and mobile
+  viewports, with the same data and features in both.
+- **Windows desktop app.** The Flask app runs inside a native pywebview window
+  using Microsoft Edge WebView2, with a single-instance lock, remembered window
+  size and position, and persistent WebView storage.
+- **CSV export.** Export all recorded expenses to a CSV file from the desktop
+  header.
+- **Safe database import.** Choose an existing Spendly database from the
+  desktop header. Imports are validated before the live database is replaced,
+  a `before-import-*.db` backup is created first, and the previous database is
+  restored if the copy fails.
+- **Database validation.** Imports accept Spendly databases with extra tables
+  and columns for forward compatibility. Unrelated SQLite schemas, missing core
+  tables or columns, non-SQLite files, and corrupt databases are rejected
+  without changing current data.
+- **Foreground dialogs.** Import confirmation, import rejection, import
+  success, and export results are shown in native dialogs owned by the app
+  window and kept above it.
+- **Startup backups.** Every desktop launch writes a database snapshot to
+  `backups\`, keeping the newest 10.
+- **First-run migration.** On first launch, Spendly looks for an existing
+  `expense.db` or `spendly.db` next to the executable or in the working
+  directory and copies the newest match into its data directory.
+- **Offline Windows installer.** Inno Setup installs Spendly per user to
+  `%LOCALAPPDATA%\Programs\Spendly`, creates Start Menu and optional desktop
+  shortcuts, and bundles the WebView2 Evergreen Standalone Installer so no
+  internet connection is required on the target machine.
+- **Portable build.** Run Spendly from a folder or removable drive with the
+  database, backups, settings, and logs stored in `data\` beside the executable.
+- **Build tooling.** PyInstaller packaging, portable archive creation, icon
+  application, and Inno Setup compilation are available through
+  `build/build.ps1`.
+- **Logging and diagnostics.** Rotating application logs, migration history,
+  and a documented data folder make support and troubleshooting straightforward.
+
+### Security
+
+- Spendly binds only to `127.0.0.1` and makes no outbound network requests.
+- No accounts, cloud services, analytics, or telemetry are used. All data
+  remains in the local SQLite database and its backups.
+- Database imports validate the source read-only and require Spendly's core
+  `profiles` and `expenses` tables before any data is replaced.
+- The app keeps startup and pre-import backups, and restores the pre-import
+  database if an import fails.
+
+[Unreleased]: https://github.com/robolivice/spendly/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/robolivice/spendly/releases/tag/v1.0.0

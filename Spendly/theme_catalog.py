@@ -168,5 +168,4 @@ THEMES_BY_ID = {theme["id"]: theme for theme in THEMES}
 
 
 def get_theme(theme_id):
-    """Return a theme entry, falling back to the default theme."""
     return THEMES_BY_ID.get(theme_id, THEMES_BY_ID[DEFAULT_THEME])

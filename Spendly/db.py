@@ -1,21 +1,27 @@
 import calendar
 import sqlite3
 from datetime import date
+from pathlib import Path
 
 import cycles
+import paths
 
-DB = "expense.db"
+DB = str(paths.db_path())
 
 
 def connect():
-    conn = sqlite3.connect(DB)
+    Path(DB).parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 
 def setup():
     conn = connect()
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("""
     CREATE TABLE IF NOT EXISTS profiles(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -434,3 +440,29 @@ def deleteExpense(pid, eid):
     conn.execute("DELETE FROM expenses WHERE id = ? AND profile_id = ?", (eid, pid))
     conn.commit()
     conn.close()
+
+
+def backup_to(destination):
+    destination = Path(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    source = connect()
+    target = sqlite3.connect(str(destination))
+    try:
+        source.backup(target)
+        target.commit()
+    finally:
+        target.close()
+        source.close()
+    return destination
+
+
+def export_rows():
+    conn = connect()
+    rows = conn.execute("""
+    SELECT p.name AS profile, e.date, e.category, e.amount, e.description
+    FROM expenses e
+    JOIN profiles p ON p.id = e.profile_id
+    ORDER BY e.date, e.id
+    """).fetchall()
+    conn.close()
+    return rows

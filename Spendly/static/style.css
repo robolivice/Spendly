@@ -397,6 +397,49 @@ svg {
     outline: none;
 }
 
+.desktop-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.desktop-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    flex: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s, opacity 0.15s;
+}
+
+.desktop-action:hover:not(:disabled) {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+    color: var(--text);
+}
+
+.desktop-action:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.desktop-action:disabled {
+    opacity: 0.55;
+    cursor: default;
+}
+
+.desktop-action .icon {
+    width: 16px;
+    height: 16px;
+}
+
 .mobile-nav {
     display: none;
     position: fixed;
@@ -2168,6 +2211,11 @@ dialog h2 {
     }
 
     .theme-gallery-link {
+        width: 36px;
+        height: 36px;
+    }
+
+    .desktop-action {
         width: 36px;
         height: 36px;
     }
