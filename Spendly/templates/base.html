@@ -111,7 +111,7 @@
                 {{ nav_link("profiles", "Profiles", "profiles", url_for("index")) }}
                 {{ nav_link("dashboard", "Dashboard", "dashboard", url_for("dashboard")) }}
                 {{ nav_link("history", "History", "history", url_for("history")) }}
-                {{ nav_link("settings", "Period settings", "settings", url_for("period_settings")) }}
+                {{ nav_link("settings", "Settings", "settings", url_for("period_settings")) }}
             </nav>
 
             <div class="header-actions">
@@ -121,6 +121,9 @@
                     <span class="profile-chip-name">{{ profile['name'] }}</span>
                 </div>
                 {% endif %}
+                <a class="theme-gallery-link header-search-link{% if request.endpoint == 'search' %} is-active{% endif %}" href="{{ url_for('search') }}" aria-label="Search expenses" title="Search expenses"{% if request.endpoint == 'search' %} aria-current="page"{% endif %}>
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                </a>
                 <a class="theme-gallery-link{% if request.endpoint == 'themes' %} is-active{% endif %}" href="{{ url_for('themes') }}" aria-label="Theme gallery" title="Theme gallery"{% if request.endpoint == 'themes' %} aria-current="page"{% endif %}>
                     <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-palette"></use></svg>
                 </a>
@@ -184,11 +187,61 @@
         </div>
     </main>
 
+    {% if undo_action %}
+    <div class="toast-root" aria-live="polite">
+        <div class="toast toast-undo" role="status">
+            <span class="toast-message">{{ undo_action['message'] }}</span>
+            <form class="toast-form" method="post" action="{{ url_for('undo_expense', action_id=undo_action['id']) }}">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <button class="toast-action" type="submit">Undo</button>
+            </form>
+            <button class="toast-close" type="button" data-toast-close aria-label="Dismiss">×</button>
+        </div>
+    </div>
+    {% endif %}
+
+    <dialog id="expense-dialog" class="expense-dialog" aria-labelledby="expense-dialog-title">
+        <form id="expense-form" method="post" action="">
+            <input type="hidden" name="next" id="expense-dialog-next" value="{{ request.full_path }}">
+            <div class="expense-dialog-head">
+                <div>
+                    <p class="eyebrow">Expense</p>
+                    <h2 id="expense-dialog-title">Edit expense</h2>
+                </div>
+                <button class="update-close" id="expense-dialog-close" type="button" aria-label="Close">×</button>
+            </div>
+            <div class="expense-dialog-grid">
+                <label class="field">Date
+                    <input type="date" name="date" id="expense-dialog-date" required>
+                </label>
+                <label class="field">Category
+                    <select name="category" id="expense-dialog-category">
+                        <option>Food</option>
+                        <option>Transport</option>
+                        <option>Shopping</option>
+                        <option>Bills</option>
+                        <option>Other</option>
+                    </select>
+                </label>
+                <label class="field">Amount ({{ currency_info['symbol'] }})
+                    <input type="number" step="0.01" min="0" name="amount" id="expense-dialog-amount" inputmode="decimal" required>
+                </label>
+                <label class="field field-grow">Description
+                    <input type="text" name="description" id="expense-dialog-description" maxlength="120" placeholder="What was it for?">
+                </label>
+            </div>
+            <div class="dialog-actions">
+                <button class="btn btn-ghost" id="expense-dialog-cancel" type="button">Cancel</button>
+                <button class="btn btn-primary" type="submit">Save changes</button>
+            </div>
+        </form>
+    </dialog>
+
     <nav class="mobile-nav" aria-label="Mobile navigation">
         {{ nav_link("profiles", "Profiles", "profiles", url_for("index")) }}
         {{ nav_link("dashboard", "Dashboard", "dashboard", url_for("dashboard")) }}
         {{ nav_link("history", "History", "history", url_for("history")) }}
-        {{ nav_link("settings", "Period settings", "settings", url_for("period_settings")) }}
+        {{ nav_link("settings", "Settings", "settings", url_for("period_settings")) }}
     </nav>
 
     <dialog id="calendar" class="calendar" aria-labelledby="cal-title">

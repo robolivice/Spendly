@@ -1,6 +1,7 @@
 import calendar
+import json
 import sqlite3
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import cycles
@@ -63,8 +64,19 @@ def setup():
         UNIQUE(profile_id, start_date, end_date),
         FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
     )""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS actions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id INTEGER NOT NULL,
+        kind TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        undone INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+    )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_expenses_profile_date ON expenses(profile_id, date)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_periods_profile_end ON periods(profile_id, end_date)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_actions_profile_undone ON actions(profile_id, undone)")
     conn.execute("""
     INSERT OR IGNORE INTO periods(profile_id, start_date, end_date, limit_amount)
     SELECT profile_id, start_date, end_date, amount FROM limits
@@ -123,6 +135,7 @@ def renameProfile(pid, name):
 
 def deleteProfile(pid):
     conn = connect()
+    conn.execute("DELETE FROM actions WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM expenses WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM limits WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM periods WHERE profile_id = ?", (pid,))
@@ -388,6 +401,37 @@ def getPeriodExpenses(pid, start, end, sort="date", direction="desc"):
     return rows
 
 
+def searchExpenses(pid, term, start=None, end=None, limit=500):
+    query = term.strip()
+    if not query:
+        return []
+    escaped = (
+        query.replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_")
+    )
+    pattern = f"%{escaped}%"
+    sql = """
+    SELECT e.id, e.date, e.category, e.amount, e.description FROM expenses e
+    WHERE e.profile_id = ? AND (
+        e.category LIKE ? ESCAPE '\\'
+        OR COALESCE(e.description, '') LIKE ? ESCAPE '\\'
+        OR e.date LIKE ? ESCAPE '\\'
+        OR printf('%.2f', e.amount) LIKE ? ESCAPE '\\'
+    )
+    """
+    params = [pid, pattern, pattern, pattern, pattern]
+    if start and end:
+        sql += " AND e.date BETWEEN ? AND ?"
+        params.extend([start, end])
+    sql += " ORDER BY e.date DESC, e.id DESC LIMIT ?"
+    params.append(int(limit))
+    conn = connect()
+    rows = conn.execute(sql, params).fetchall()
+    conn.close()
+    return rows
+
+
 def getPeriodHistory(pid, year=None, sort="period", direction="desc"):
     columns = {
         "period": ("p.end_date", False),
@@ -427,19 +471,142 @@ def getPeriodYears(pid):
 
 def save(pid, exp_date, category, amount, description):
     conn = connect()
-    conn.execute("""
+    cur = conn.execute("""
     INSERT INTO expenses(profile_id, date, category, amount, description)
     VALUES (?, ?, ?, ?, ?)
     """, (pid, exp_date, category, amount, description))
+    eid = cur.lastrowid
     conn.commit()
     conn.close()
+    return eid
+
+
+def getExpense(pid, eid):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, date, category, amount, description FROM expenses
+    WHERE id = ? AND profile_id = ?
+    """, (eid, pid)).fetchone()
+    conn.close()
+    return row
+
+
+def updateExpense(pid, eid, exp_date, category, amount, description):
+    conn = connect()
+    cur = conn.execute("""
+    UPDATE expenses SET date = ?, category = ?, amount = ?, description = ?
+    WHERE id = ? AND profile_id = ?
+    """, (exp_date, category, amount, description, eid, pid))
+    conn.commit()
+    changed = cur.rowcount > 0
+    conn.close()
+    return changed
 
 
 def deleteExpense(pid, eid):
     conn = connect()
+    row = conn.execute("""
+    SELECT id, date, category, amount, description FROM expenses
+    WHERE id = ? AND profile_id = ?
+    """, (eid, pid)).fetchone()
+    if row is None:
+        conn.close()
+        return None
     conn.execute("DELETE FROM expenses WHERE id = ? AND profile_id = ?", (eid, pid))
     conn.commit()
     conn.close()
+    return row
+
+
+def logDeleteAction(pid, expense):
+    payload = {
+        "message": "Expense deleted.",
+        "expense": {
+            "id": expense["id"],
+            "date": expense["date"],
+            "category": expense["category"],
+            "amount": expense["amount"],
+            "description": expense["description"] or "",
+        },
+    }
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+    conn = connect()
+    conn.execute("""
+    DELETE FROM actions
+    WHERE profile_id = ? AND (undone = 1 OR created_at < ?)
+    """, (pid, cutoff))
+    cur = conn.execute("""
+    INSERT INTO actions(profile_id, kind, payload, created_at)
+    VALUES (?, ?, ?, ?)
+    """, (
+        pid,
+        "delete",
+        json.dumps(payload),
+        datetime.now(timezone.utc).isoformat(),
+    ))
+    action_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return action_id
+
+
+def getPendingAction(pid, action_id):
+    if pid is None or action_id is None:
+        return None
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, kind, payload FROM actions
+    WHERE id = ? AND profile_id = ? AND undone = 0
+    """, (action_id, pid)).fetchone()
+    conn.close()
+    if row is None or row["kind"] != "delete":
+        return None
+    try:
+        payload = json.loads(row["payload"])
+    except (TypeError, ValueError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    return {
+        "id": row["id"],
+        "message": payload.get("message") or "Expense deleted.",
+    }
+
+
+def undoDelete(pid, action_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, kind, payload FROM actions
+    WHERE id = ? AND profile_id = ? AND undone = 0
+    """, (action_id, pid)).fetchone()
+    if row is None or row["kind"] != "delete":
+        conn.close()
+        return None
+    try:
+        payload = json.loads(row["payload"])
+        expense = payload["expense"]
+        eid = int(expense["id"])
+        exp_date = str(expense["date"])
+        category = str(expense["category"])
+        amount = float(expense["amount"])
+        description = str(expense.get("description") or "")
+    except (KeyError, TypeError, ValueError):
+        conn.close()
+        return None
+    existing = conn.execute(
+        "SELECT 1 FROM expenses WHERE id = ?", (eid,)
+    ).fetchone()
+    if existing:
+        conn.close()
+        return None
+    conn.execute("""
+    INSERT INTO expenses(id, profile_id, date, category, amount, description)
+    VALUES (?, ?, ?, ?, ?, ?)
+    """, (eid, pid, exp_date, category, amount, description))
+    conn.execute("UPDATE actions SET undone = 1 WHERE id = ?", (action_id,))
+    conn.commit()
+    conn.close()
+    return eid
 
 
 def backup_to(destination):

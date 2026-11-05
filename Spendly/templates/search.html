@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Search · Spendly{% endblock %}
+
+{% block content %}
+<header class="page-head">
+    <div>
+        <p class="eyebrow">Search</p>
+        <h1>Find an expense</h1>
+        <p class="page-sub">Search descriptions, categories, dates, and amounts across your saved data.</p>
+    </div>
+    <div class="page-actions">
+        <span class="badge">{{ 'This period' if scope == 'current' else 'All time' }}</span>
+    </div>
+</header>
+
+<article class="card search-panel">
+    <form action="{{ url_for('search') }}" method="get" class="search-form">
+        <label class="search-box search-box-lg">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+            <span class="sr-only">Search expenses</span>
+            <input type="search" name="q" value="{{ query }}" placeholder="Try coffee, Transport, or 24.50" autocomplete="off">
+        </label>
+        <label class="field search-scope">Scope
+            <select name="scope">
+                <option value="current" {% if scope == 'current' %}selected{% endif %}>This period{% if current_period %} · {{ current_period['end_date'] }}{% endif %}</option>
+                <option value="all" {% if scope == 'all' %}selected{% endif %}>All time</option>
+            </select>
+        </label>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+</article>
+
+{% if query %}
+<section class="summary-row search-summary" aria-label="Search summary">
+    <article class="card stat-card">
+        <span class="stat-label">Matches</span>
+        <span class="stat-value">{{ results|length }}</span>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Total found</span>
+        <span class="stat-value">{{ total|money }}</span>
+    </article>
+    <article class="card stat-card">
+        <span class="stat-label">Query</span>
+        <span class="stat-value search-query">{{ query }}</span>
+    </article>
+</section>
+
+<article class="card search-results">
+    <div class="card-head">
+        <div>
+            <h2>{{ 'No matches' if results|length == 0 else 'Matching expenses' }}</h2>
+            <span class="muted">{{ results|length }} {{ 'expense' if results|length == 1 else 'expenses' }} for “{{ query }}”</span>
+        </div>
+        {% if scope == 'current' and current_period %}
+        <span class="muted">{{ current_period['start_date'] }} to {{ current_period['end_date'] }}</span>
+        {% else %}
+        <span class="muted">All saved periods</span>
+        {% endif %}
+    </div>
+
+    {% if results|length == 0 %}
+    <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">0</span>
+        <strong>No expenses match “{{ query }}”</strong>
+        <p>Try another word, a date, or search all time instead.</p>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('search', q=query, scope='all') }}">Search all time</a>
+    </div>
+    {% else %}
+    <div class="table-wrap">
+        <table class="expense-table search-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                    <th><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in results %}
+                <tr>
+                    <td class="nowrap">{{ e['date'] }}</td>
+                    <td><span class="badge cat-badge cat-{{ e['category']|lower }}">{{ e['category'] }}</span></td>
+                    <td class="amount">{{ e['amount']|money }}</td>
+                    <td>{{ e['description'] or '' }}</td>
+                    <td class="actions-cell">
+                        <div class="row-actions">
+                            <button type="button" class="btn btn-ghost btn-sm edit-expense"
+                                    data-edit-expense
+                                    data-action="{{ url_for('edit_expense', eid=e['id']) }}"
+                                    data-date="{{ e['date'] }}"
+                                    data-category="{{ e['category'] }}"
+                                    data-amount="{{ '%.2f'|format(e['amount']) }}"
+                                    data-description="{{ e['description'] or '' }}">Edit</button>
+                            <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
+                                <input type="hidden" name="next" value="{{ request.full_path }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</article>
+{% else %}
+<article class="card search-hint">
+    <div class="empty-state">
+        <span class="empty-icon" aria-hidden="true">⌕</span>
+        <strong>Search every saved expense</strong>
+        <p>Use a description, category, date, or amount. Choose this period to stay within the current cycle.</p>
+    </div>
+</article>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+{% endblock %}

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Period settings · Spendly{% endblock %}
+{% block title %}Settings · Spendly{% endblock %}
 
 {% block content %}
 <header class="page-head">
     <div>
         <p class="eyebrow">Settings</p>
-        <h1>Period settings</h1>
-        <p class="page-sub">Edit saved periods, add a past month, and choose how Spendly looks.</p>
+        <h1>Settings</h1>
+        <p class="page-sub">Manage periods, currency, appearance, and desktop updates.</p>
     </div>
     <div class="page-actions">
         <span class="badge">{{ periods|length }} {{ 'period' if periods|length == 1 else 'periods' }}</span>
@@ -14,6 +14,46 @@
 </header>
 
 <section class="settings-grid">
+    <article class="card settings-card">
+        <div class="card-head">
+            <div>
+                <h2>Preferences</h2>
+                <span class="muted">Choose how amounts are shown.</span>
+            </div>
+            <span class="badge">{{ currency }}</span>
+        </div>
+        <form action="{{ url_for('save_preferences') }}" method="post" class="inline-form">
+            <input type="hidden" name="next" value="{{ request.full_path }}">
+            <label class="field field-grow">Currency
+                <select name="currency">
+                    {% for option in currency_options %}
+                    <option value="{{ option.code }}" {% if option.code == currency %}selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button class="btn btn-primary" type="submit">Save preferences</button>
+        </form>
+        <p class="small">Applies to every profile and saved period.</p>
+    </article>
+
+    {% if is_desktop %}
+    <article class="card settings-card">
+        <div class="card-head">
+            <div>
+                <h2>Desktop updates</h2>
+                <span class="muted">Spendly {{ app_version }}</span>
+            </div>
+            <span class="badge">Windows</span>
+        </div>
+        <label class="check">
+            <input type="checkbox" id="settings-auto-update" disabled>
+            <span>Check for updates automatically</span>
+        </label>
+        <p class="small" id="settings-update-status">Loading update preferences...</p>
+        <button class="btn btn-ghost" type="button" id="settings-check-update" disabled>Check now</button>
+    </article>
+    {% endif %}
+
     {% if period %}
     <article class="card settings-card span-2">
         <div class="card-head">
@@ -68,7 +108,7 @@
             <label class="field">Ends
                 <input type="date" name="end" value="{{ new_end }}" class="date-picker" readonly required>
             </label>
-            <label class="field field-grow">Limit (optional)
+            <label class="field field-grow">Limit ({{ currency_info['symbol'] }}, optional)
                 <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
             </label>
             <button class="btn btn-primary" type="submit">Add period</button>

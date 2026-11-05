@@ -1,8 +1,10 @@
 import os
 from datetime import date
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 
+import currency
 import cycles
 import db
 import paths
@@ -26,9 +28,38 @@ DESKTOP_MODE = bool(os.environ.get("SPENDLY_DESKTOP"))
 db.setup()
 
 
+def active_currency():
+    return currency.normalize(settings.get("currency"))
+
+
 @app.context_processor
 def inject_desktop():
-    return {"is_desktop": DESKTOP_MODE}
+    return {"is_desktop": DESKTOP_MODE, "app_version": paths.APP_VERSION}
+
+
+@app.context_processor
+def inject_preferences():
+    code = active_currency()
+    return {
+        "currency": code,
+        "currency_info": currency.CURRENCIES[code],
+        "currency_options": [
+            currency.CURRENCIES[item] for item in currency.CURRENCY_CODES
+        ],
+    }
+
+
+@app.context_processor
+def inject_undo():
+    action_id = request.args.get("undo", type=int)
+    if action_id is None:
+        return {"undo_action": None}
+    return {"undo_action": db.getPendingAction(session.get("pid"), action_id)}
+
+
+@app.template_filter("money")
+def money(value):
+    return currency.format_amount(value, active_currency())
 
 
 @app.context_processor
@@ -88,6 +119,19 @@ def safe_next(default):
     if target.startswith("/") and not target.startswith("//"):
         return target
     return default
+
+
+def with_query(target, **values):
+    parts = urlsplit(target)
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key not in values
+    ]
+    query.extend((key, str(value)) for key, value in values.items())
+    return urlunsplit(
+        (parts.scheme, parts.netloc, parts.path, urlencode(query), parts.fragment)
+    )
 
 
 @app.route("/")
@@ -309,6 +353,53 @@ def period_settings():
     return render_template(
         "period_settings.html", profile=profile, cycle=cycle, periods=views,
         period=period, new_start=new_start, new_end=new_end
+    )
+
+
+@app.route("/settings/preferences", methods=["POST"])
+def save_preferences():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    code = currency.normalize(request.form.get("currency"))
+    settings.set("currency", code)
+    flash("Preferences saved.", "ok")
+    return redirect(safe_next(url_for("period_settings")))
+
+
+@app.route("/search")
+def search():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    profile = db.getProfile(pid)
+    if profile is None:
+        return redirect(url_for("switch"))
+    if db.getCycle(pid) is None:
+        return redirect(url_for("dashboard"))
+    today = date.today()
+    db.ensurePeriods(pid, today)
+    query = request.args.get("q", "").strip()[:120]
+    scope = request.args.get("scope", "current")
+    if scope not in ("current", "all"):
+        scope = "current"
+    current = db.getPeriodContaining(pid, today.isoformat())
+    range_start = None
+    range_end = None
+    if scope == "current" and current is not None:
+        range_start = current["start_date"]
+        range_end = current["end_date"]
+    elif scope == "current":
+        scope = "all"
+    results = db.searchExpenses(pid, query, range_start, range_end) if query else []
+    return render_template(
+        "search.html",
+        profile=profile,
+        query=query,
+        scope=scope,
+        results=results,
+        total=sum(row["amount"] for row in results),
+        current_period=current,
     )
 
 
@@ -559,20 +650,80 @@ def add():
     return redirect(url_for("dashboard", period=period["id"]))
 
 
+@app.route("/expense/<int:eid>/edit", methods=["POST"])
+def edit_expense(eid):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    expense = db.getExpense(pid, eid)
+    if expense is None:
+        flash("Expense not found.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    exp_date = request.form.get("date", "").strip()
+    try:
+        parsed = date.fromisoformat(exp_date)
+    except ValueError:
+        flash("Enter a valid date.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    if parsed > date.today():
+        flash("Expense dates cannot be in the future.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    try:
+        amount = float(request.form["amount"])
+    except (KeyError, ValueError):
+        flash("Enter a valid amount.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    if amount < 0:
+        flash("The amount cannot be negative.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    category = request.form.get("category", "Other")
+    description = request.form.get("description", "").strip()
+    db.updateExpense(pid, eid, exp_date, category, amount, description)
+    db.ensurePeriods(pid)
+    flash("Expense updated.", "ok")
+    target = safe_next("")
+    if target:
+        return redirect(target)
+    period = db.getPeriodContaining(pid, exp_date)
+    if period is not None:
+        return redirect(url_for("dashboard", period=period["id"]))
+    return redirect(url_for("dashboard"))
+
+
 @app.route("/expense/delete/<int:eid>", methods=["POST"])
 def delete(eid):
     pid = session.get("pid")
     if pid is None:
         return redirect(url_for("index"))
-    db.deleteExpense(pid, eid)
-    range_start = request.form.get("start")
-    range_end = request.form.get("end")
-    if range_start and range_end:
-        return redirect(url_for("dashboard", start=range_start, end=range_end))
-    period_id = request.form.get("period", type=int)
-    if period_id and db.getPeriod(pid, period_id):
-        return redirect(url_for("dashboard", period=period_id))
-    return redirect(url_for("dashboard"))
+    expense = db.deleteExpense(pid, eid)
+    target = safe_next("")
+    if not target:
+        range_start = request.form.get("start")
+        range_end = request.form.get("end")
+        period_id = request.form.get("period", type=int)
+        if range_start and range_end:
+            target = url_for("dashboard", start=range_start, end=range_end)
+        elif period_id and db.getPeriod(pid, period_id):
+            target = url_for("dashboard", period=period_id)
+        else:
+            target = url_for("dashboard")
+    if expense is not None:
+        action_id = db.logDeleteAction(pid, expense)
+        target = with_query(target, undo=action_id)
+    return redirect(target)
+
+
+@app.route("/expense/undo/<int:action_id>", methods=["POST"])
+def undo_expense(action_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    restored = db.undoDelete(pid, action_id)
+    if restored is None:
+        flash("That action can no longer be undone.", "error")
+    else:
+        flash("Expense restored.", "ok")
+    return redirect(safe_next(url_for("dashboard")))
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@
         <p class="page-sub">Review saved periods and see how each budget finished.</p>
     </div>
     <div class="page-actions">
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('search') }}">Search expenses</a>
         <span class="badge">{{ periods|length }} {{ 'period' if periods|length == 1 else 'periods' }}</span>
     </div>
 </header>
@@ -30,7 +31,7 @@
     </article>
     <article class="card stat-card">
         <span class="stat-label">Total spent</span>
-        <span class="stat-value">{{ "%.2f"|format(summary['spent']) }}</span>
+        <span class="stat-value">{{ summary['spent']|money }}</span>
     </article>
     <article class="card stat-card">
         <span class="stat-label">Over / near limit</span>
@@ -83,10 +84,10 @@
                         {% if p.is_current %}<span class="badge badge-current">Current</span>{% endif %}
                     </td>
                     <td class="small nowrap">{{ p.dates }}</td>
-                    <td class="amount">{{ "%.2f"|format(p.spent) }}</td>
-                    <td class="amount">{% if p.limit is not none %}{{ "%.2f"|format(p.limit) }}{% else %}Not set{% endif %}</td>
+                    <td class="amount">{{ p.spent|money }}</td>
+                    <td class="amount">{% if p.limit is not none %}{{ p.limit|money }}{% else %}Not set{% endif %}</td>
                     <td class="amount {% if p.remaining is not none %}{{ p.status }}-text{% endif %}">
-                        {% if p.remaining is not none %}{{ "%.2f"|format(p.remaining) }}{% else %}—{% endif %}
+                        {% if p.remaining is not none %}{{ p.remaining|money }}{% else %}—{% endif %}
                     </td>
                     <td><span class="status-pill status-{{ p.status }}">{{ status_label(p.status) }}</span></td>
                 </tr>

@@ -23,6 +23,7 @@ _DEFAULTS: dict[str, Any] = {
     "secret_key": "",
     "window": dict(DEFAULT_WINDOW),
     "last_profile": None,
+    "currency": "INR",
     "updates": dict(DEFAULT_UPDATES),
 }
 

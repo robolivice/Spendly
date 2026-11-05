@@ -27,6 +27,9 @@
         later: document.getElementById("update-later"),
         cancel: document.getElementById("update-cancel"),
         install: document.getElementById("update-install"),
+        settingsAuto: document.getElementById("settings-auto-update"),
+        settingsCheck: document.getElementById("settings-check-update"),
+        settingsStatus: document.getElementById("settings-update-status"),
     };
 
     if (!elements.button || !elements.dialog) return;
@@ -180,6 +183,24 @@
             elements.autoCheck.checked = data.consent === true;
             elements.autoCheck.disabled = !supported;
         }
+        if (elements.settingsAuto) {
+            elements.settingsAuto.checked = data.consent === true;
+            elements.settingsAuto.disabled = !supported;
+        }
+        if (elements.settingsCheck) {
+            elements.settingsCheck.disabled = !supported || !state.bridge;
+        }
+        if (elements.settingsStatus) {
+            if (!supported) {
+                setText(elements.settingsStatus, "Update checks are available in the installed Windows app.");
+            } else if (data.auto_check) {
+                setText(elements.settingsStatus, "Automatic checks are on.");
+            } else if (data.consent === false) {
+                setText(elements.settingsStatus, "Automatic checks are off. You can still check manually.");
+            } else {
+                setText(elements.settingsStatus, "Choose whether Spendly checks GitHub for updates.");
+            }
+        }
 
         const releaseUrl = hasUpdate ? update.release_url : "";
         if (elements.releaseLink) {
@@ -297,6 +318,8 @@
         if (!api) return false;
         state.bridge = api;
         elements.button.disabled = false;
+        if (elements.settingsAuto) elements.settingsAuto.disabled = false;
+        if (elements.settingsCheck) elements.settingsCheck.disabled = false;
         refresh();
         return true;
     }
@@ -478,6 +501,31 @@
             if (!state.bridge) return;
             try {
                 const data = await state.bridge.set_update_consent(elements.autoCheck.checked);
+                if (data && typeof data === "object") render(data);
+            } catch (error) {
+            }
+            await refresh();
+        });
+    }
+
+    if (elements.settingsAuto) {
+        elements.settingsAuto.addEventListener("change", async () => {
+            if (!state.bridge) return;
+            try {
+                const data = await state.bridge.set_update_consent(elements.settingsAuto.checked);
+                if (data && typeof data === "object") render(data);
+            } catch (error) {
+            }
+            await refresh();
+        });
+    }
+
+    if (elements.settingsCheck) {
+        elements.settingsCheck.addEventListener("click", async () => {
+            if (!state.bridge) return;
+            openDialog();
+            try {
+                const data = await state.bridge.check_for_updates(true);
                 if (data && typeof data === "object") render(data);
             } catch (error) {
             }

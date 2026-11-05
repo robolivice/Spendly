@@ -54,7 +54,7 @@
         <label class="field">Ends
             <input type="date" name="end" value="{{ default_end }}" class="date-picker" readonly required>
         </label>
-        <label class="field">Monthly limit (optional)
+        <label class="field">Monthly limit ({{ currency_info['symbol'] }}, optional)
             <input type="number" step="0.01" min="0" name="amount" placeholder="No limit">
         </label>
         <button class="btn btn-primary" type="submit">Start tracking</button>
@@ -123,7 +123,7 @@
         <input type="hidden" name="start" value="{{ range_start }}">
         <input type="hidden" name="end" value="{{ range_end }}">
         <input type="hidden" name="mode" value="range">
-        <label class="field">Limit
+        <label class="field">Limit ({{ currency_info['symbol'] }})
             <input type="number" step="0.01" min="0" name="amount" placeholder="No limit"
                    {% if save_limit is not none %}value="{{ save_limit }}"{% endif %}>
         </label>
@@ -140,10 +140,10 @@
         <div class="hero-main">
             <div class="hero-copy">
                 <span class="card-kicker">Spent this period</span>
-                <p class="hero-amount">{{ "%.2f"|format(period.spent) }}</p>
+                <p class="hero-amount">{{ period.spent|money }}</p>
                 <p class="hero-sub">
                     {% if period.limit is not none %}
-                    of {{ "%.2f"|format(period.limit) }} <span aria-hidden="true">·</span> {{ "%.0f"|format(period.percent) }}% used
+                    of {{ period.limit|money }} <span aria-hidden="true">·</span> {{ "%.0f"|format(period.percent) }}% used
                     {% else %}
                     No limit set for this period
                     {% endif %}
@@ -169,12 +169,12 @@
         <div class="hero-stats">
             <div class="hero-stat">
                 <span class="stat-label">Limit</span>
-                <span class="stat-value">{% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}</span>
+                <span class="stat-value">{% if period.limit is not none %}{{ period.limit|money }}{% else %}Not set{% endif %}</span>
             </div>
             <div class="hero-stat">
                 <span class="stat-label">Remaining</span>
                 <span class="stat-value {% if period.remaining is not none %}{{ period.status }}-text{% endif %}">
-                    {% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}—{% endif %}
+                    {% if period.remaining is not none %}{{ period.remaining|money }}{% else %}—{% endif %}
                 </span>
             </div>
             <div class="hero-stat">
@@ -192,12 +192,12 @@
         <dl class="meta-list">
             <div><dt>Range</dt><dd>{{ period.dates }}</dd></div>
             <div><dt>Status</dt><dd class="{{ period.status }}-text">{{ status_label(period.status) }}</dd></div>
-            <div><dt>Limit</dt><dd>{% if period.limit is not none %}{{ "%.2f"|format(period.limit) }}{% else %}Not set{% endif %}</dd></div>
-            <div><dt>Remaining</dt><dd class="{{ period.status }}-text">{% if period.remaining is not none %}{{ "%.2f"|format(period.remaining) }}{% else %}—{% endif %}</dd></div>
+            <div><dt>Limit</dt><dd>{% if period.limit is not none %}{{ period.limit|money }}{% else %}Not set{% endif %}</dd></div>
+            <div><dt>Remaining</dt><dd class="{{ period.status }}-text">{% if period.remaining is not none %}{{ period.remaining|money }}{% else %}—{% endif %}</dd></div>
         </dl>
         {% if period.id is not none %}
         <form action="{{ url_for('period_limit', period_id=period.id) }}" method="post" class="inline-form limit-form">
-            <label class="field">Set a limit
+            <label class="field">Set a limit ({{ currency_info['symbol'] }})
                 <input type="number" step="0.01" min="0" name="amount" placeholder="Period limit"
                        {% if period.limit is not none %}value="{{ period.limit }}"{% endif %}>
             </label>
@@ -227,7 +227,7 @@
                     <option>Other</option>
                 </select>
             </label>
-            <label class="field">Amount
+            <label class="field">Amount ({{ currency_info['symbol'] }})
                 <input type="number" step="0.01" min="0" name="amount" placeholder="0.00" inputmode="decimal" required>
             </label>
             <label class="field field-grow">Description
@@ -241,9 +241,16 @@
         <div class="card-head">
             <div>
                 <h2>Transactions</h2>
-                <span class="muted">{{ expenses|length }} {{ 'expense' if expenses|length == 1 else 'expenses' }}</span>
+                <span class="muted" id="txn-count" data-singular="expense" data-plural="expenses">{{ expenses|length }} {{ 'expense' if expenses|length == 1 else 'expenses' }}</span>
             </div>
-            <span class="muted">{{ period.dates }}</span>
+            <div class="txn-tools">
+                <label class="search-box">
+                    <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"></use></svg>
+                    <span class="sr-only">Search this period</span>
+                    <input type="search" id="txn-search" placeholder="Search expenses" autocomplete="off">
+                </label>
+                <span class="muted txn-period">{{ period.dates }}</span>
+            </div>
         </div>
         {% if expenses|length == 0 %}
         <div class="empty-state">
@@ -253,7 +260,7 @@
             <a class="btn btn-ghost btn-sm" href="#add-expense">Add an expense</a>
         </div>
         {% else %}
-        <div class="table-wrap">
+        <div class="table-wrap" id="txn-table-wrap">
             <table class="expense-table">
                 <thead>
                     <tr>
@@ -266,23 +273,38 @@
                 </thead>
                 <tbody>
                     {% for e in expenses %}
-                    <tr>
+                    <tr data-expense-row data-search="{{ ((e['description'] or '') ~ ' ' ~ e['category'] ~ ' ' ~ e['date'] ~ ' ' ~ ('%.2f'|format(e['amount'])))|lower }}">
                         <td class="nowrap">{{ e['date'] }}</td>
                         <td><span class="badge cat-badge cat-{{ e['category']|lower }}">{{ e['category'] }}</span></td>
-                        <td class="amount">{{ "%.2f"|format(e['amount']) }}</td>
+                        <td class="amount">{{ e['amount']|money }}</td>
                         <td>{{ e['description'] or '' }}</td>
                         <td class="actions-cell">
-                            <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
-                                <input type="hidden" name="start" value="{{ range_start }}">
-                                <input type="hidden" name="end" value="{{ range_end }}">
-                                <input type="hidden" name="period" value="{{ period.id or '' }}">
-                                <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                            </form>
+                            <div class="row-actions">
+                                <button type="button" class="btn btn-ghost btn-sm edit-expense"
+                                        data-edit-expense
+                                        data-action="{{ url_for('edit_expense', eid=e['id']) }}"
+                                        data-date="{{ e['date'] }}"
+                                        data-category="{{ e['category'] }}"
+                                        data-amount="{{ '%.2f'|format(e['amount']) }}"
+                                        data-description="{{ e['description'] or '' }}">Edit</button>
+                                <form action="{{ url_for('delete', eid=e['id']) }}" method="post">
+                                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                                    <input type="hidden" name="start" value="{{ range_start }}">
+                                    <input type="hidden" name="end" value="{{ range_end }}">
+                                    <input type="hidden" name="period" value="{{ period.id or '' }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+        <div class="empty-state" id="txn-no-results" hidden>
+            <span class="empty-icon" aria-hidden="true">?</span>
+            <strong>No matching expenses</strong>
+            <p>Try a different description, category, date, or amount.</p>
         </div>
         {% endif %}
     </article>

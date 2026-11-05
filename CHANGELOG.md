@@ -5,6 +5,35 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0]
+
+A dedicated settings page, currency-aware amounts, expense editing, undo, and search.
+
+### Added
+
+- **Settings page.** Manage saved periods, cycle settings, currency, appearance,
+  and desktop update preferences from one place.
+- **Currency support.** Choose INR (default), USD, EUR, or GBP in Settings. The
+  choice is remembered and applied to dashboard totals, limits, history, and
+  search results.
+- **Expense editing.** Update the date, category, amount, or description of any
+  saved expense from the dashboard or search results.
+- **Undo after delete.** Deleting an expense now shows a themed toast with an
+  Undo action that restores the expense immediately.
+- **Expense search.** Filter the current period's transactions as you type, or
+  use the search page to find expenses by description, category, date, or
+  amount across the current period or all saved data.
+- **Desktop update controls in Settings.** See the installed version, toggle
+  automatic update checks, and start a manual check without opening the update
+  dialog first.
+
+### Changed
+
+- Period settings is now the general Settings page, with the existing period
+  and cycle controls alongside the new preferences.
+- All money values are formatted with the selected currency symbol and locale
+  conventions instead of showing bare numbers.
+
 ## [1.1.0]
 
 Desktop update notifications, one-click updates, and a lighter updater download.
@@ -116,5 +145,6 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
+[1.2.0]: https://github.com/robolivice/spendly/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/robolivice/spendly/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/robolivice/spendly/releases/tag/v1.0.0

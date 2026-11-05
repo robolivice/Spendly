@@ -1768,6 +1768,10 @@ tbody tr:last-child td {
     margin-top: 10px;
 }
 
+.settings-card #settings-check-update {
+    margin-top: 10px;
+}
+
 .appearance-card .card-head {
     align-items: center;
     flex-wrap: wrap;
@@ -2126,6 +2130,216 @@ dialog h2 {
 
     .theme-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.transactions-head {
+    align-items: center;
+}
+
+.txn-tools {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.txn-tools .search-box {
+    min-width: 180px;
+}
+
+.txn-period {
+    white-space: nowrap;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-2);
+    color: var(--muted);
+}
+
+.search-box:focus-within {
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--border));
+    outline: 2px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    outline-offset: 1px;
+}
+
+.search-box .icon {
+    width: 16px;
+    height: 16px;
+    flex: none;
+}
+
+.search-box input[type="search"] {
+    min-height: 36px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 0.82rem;
+}
+
+.search-box input[type="search"]:focus {
+    border-color: transparent;
+    outline: none;
+}
+
+.search-box-lg {
+    flex: 1 1 320px;
+}
+
+.search-box-lg input[type="search"] {
+    min-height: 40px;
+    font-size: 0.9rem;
+}
+
+.search-panel {
+    margin-bottom: 16px;
+}
+
+.search-form {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.search-scope {
+    flex: 0 1 230px;
+}
+
+.search-summary .search-query {
+    overflow-wrap: anywhere;
+    font-size: 1.05rem;
+}
+
+.search-results .card-head {
+    align-items: center;
+}
+
+.search-table {
+    min-width: 640px;
+}
+
+.row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.row-actions form {
+    margin: 0;
+}
+
+.expense-dialog {
+    width: min(560px, 94vw);
+}
+
+.expense-dialog-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.expense-dialog-head h2 {
+    margin: 0;
+}
+
+.expense-dialog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.expense-dialog-grid .field-grow {
+    grid-column: 1 / -1;
+}
+
+.toast-root {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(420px, calc(100vw - 32px));
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    font-size: 0.85rem;
+    pointer-events: auto;
+    animation: toast-in 0.18s ease-out;
+}
+
+.toast-message {
+    flex: 1;
+    min-width: 0;
+}
+
+.toast-form {
+    margin: 0;
+}
+
+.toast-action {
+    padding: 2px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font: inherit;
+    font-weight: 750;
+    cursor: pointer;
+}
+
+.toast-close {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.toast-close:hover {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--text);
+}
+
+.toast-out {
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.18s, transform 0.18s;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
     }
 }
 
@@ -2563,5 +2777,51 @@ dialog h2 {
 
     .update-dialog-actions .btn {
         flex: 1 1 auto;
+    }
+
+    .txn-tools {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .txn-tools .search-box {
+        flex: 1 1 100%;
+    }
+
+    .txn-period {
+        display: none;
+    }
+
+    .search-form {
+        align-items: stretch;
+    }
+
+    .search-scope {
+        flex: 1 1 100%;
+    }
+
+    .search-form .btn {
+        width: 100%;
+    }
+
+    .expense-dialog-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .expense-dialog-grid .field-grow {
+        grid-column: 1;
+    }
+
+    .toast-root {
+        right: 16px;
+        left: 16px;
+        bottom: 86px;
+        width: auto;
+    }
+}
+
+@media (max-width: 440px) {
+    .header-search-link {
+        display: none;
     }
 }
