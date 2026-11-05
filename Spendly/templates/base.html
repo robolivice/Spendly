@@ -83,6 +83,10 @@
             <path d="m7.5 7.5 4.5-4.5 4.5 4.5"></path>
             <path d="M4 16.5v2A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5v-2"></path>
         </symbol>
+        <symbol id="i-update" viewBox="0 0 24 24">
+            <path d="M20 11.5a8 8 0 1 1-2.4-5.7"></path>
+            <path d="M20 4.5v5h-5"></path>
+        </symbol>
     </svg>
 
     {% set endpoint = request.endpoint or "" %}
@@ -130,6 +134,10 @@
                 </label>
                 {% if is_desktop %}
                 <div class="desktop-actions">
+                    <button type="button" class="desktop-action update-action" id="update-button" title="Check for updates" aria-label="Check for updates" disabled>
+                        <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-update"></use></svg>
+                        <span class="update-dot" id="update-dot" hidden></span>
+                    </button>
                     <button type="button" class="desktop-action" data-desktop-action="export_csv" title="Export CSV" aria-label="Export CSV" disabled>
                         <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-export"></use></svg>
                     </button>
@@ -141,6 +149,24 @@
             </div>
         </div>
     </header>
+
+    {% if is_desktop %}
+    <div class="update-banner" id="update-banner" role="status" aria-live="polite" hidden>
+        <div class="update-banner-inner">
+            <span class="update-banner-icon" aria-hidden="true">
+                <svg class="icon" focusable="false"><use href="#i-update"></use></svg>
+            </span>
+            <div class="update-banner-copy">
+                <strong id="update-banner-title">A new version is available</strong>
+                <span id="update-banner-text">See what changed and install it.</span>
+            </div>
+            <div class="update-banner-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="update-banner-open">See details</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="update-banner-later">Later</button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <main class="app-main" id="main">
         <div class="page-container">
@@ -183,9 +209,54 @@
         </div>
     </dialog>
 
+    {% if is_desktop %}
+    <dialog id="update-consent" class="update-dialog update-consent-dialog" aria-labelledby="update-consent-title">
+        <p class="eyebrow">Updates</p>
+        <h2 id="update-consent-title">Check for updates automatically?</h2>
+        <p class="update-copy">Spendly can ask GitHub once a day whether a newer version is available. Checks run only in the desktop app.</p>
+        <p class="update-note">GitHub receives your IP address and the app version. No usage data or personal data is sent. You can change this setting later.</p>
+        <div class="dialog-actions">
+            <button class="btn btn-ghost" id="update-consent-no" type="button">Not now</button>
+            <button class="btn btn-primary" id="update-consent-yes" type="button">Enable automatic checks</button>
+        </div>
+    </dialog>
+
+    <dialog id="update-dialog" class="update-dialog" aria-labelledby="update-dialog-title">
+        <div class="update-dialog-head">
+            <div>
+                <p class="eyebrow">Update</p>
+                <h2 id="update-dialog-title">Spendly updates</h2>
+                <p class="small" id="update-meta"></p>
+            </div>
+            <button class="update-close" id="update-close" type="button" aria-label="Close">×</button>
+        </div>
+        <p class="update-state" id="update-state"></p>
+        <div class="update-notes" id="update-notes"></div>
+        <div class="update-progress" id="update-progress" hidden>
+            <div class="update-progress-track">
+                <div class="update-progress-fill" id="update-progress-fill"></div>
+            </div>
+            <p class="small" id="update-progress-text"></p>
+        </div>
+        <label class="check update-auto" id="update-auto-wrap">
+            <input type="checkbox" id="update-auto-check">
+            <span>Check for updates automatically</span>
+        </label>
+        <div class="dialog-actions update-dialog-actions">
+            <a class="btn btn-ghost" id="update-release-link" href="#" target="_blank" rel="noopener" hidden>Release page</a>
+            <button class="btn btn-ghost" id="update-check" type="button" hidden>Check again</button>
+            <button class="btn btn-ghost" id="update-skip" type="button" hidden>Skip this version</button>
+            <button class="btn btn-ghost" id="update-later" type="button" hidden>Remind me later</button>
+            <button class="btn btn-ghost" id="update-cancel" type="button" hidden>Cancel download</button>
+            <button class="btn btn-primary" id="update-install" type="button" hidden>Download and install</button>
+        </div>
+    </dialog>
+    {% endif %}
+
     <script src="{{ url_for('static', filename='js/theme.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/dropdown.js') }}" defer></script>
     {% if is_desktop %}<script src="{{ url_for('static', filename='js/desktop.js') }}" defer></script>{% endif %}
+    {% if is_desktop %}<script src="{{ url_for('static', filename='js/update.js') }}" defer></script>{% endif %}
     {% block scripts %}{% endblock %}
 </body>
 </html>

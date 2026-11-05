@@ -1,7 +1,15 @@
 #define AppName "Spendly"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #define AppVersion "0.0.0"
+#endif
 #define AppPublisher "Spendly"
 #define AppExeName "Spendly.exe"
+
+#ifdef LiteUpdate
+  #define OutputSuffix "-Update"
+#else
+  #define OutputSuffix "-Setup"
+#endif
 
 [Setup]
 AppId={{B0E6C3A2-7F4D-4C58-9C1E-3A5D9F2B7C41}
@@ -17,7 +25,7 @@ MinVersion=10.0
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=..\dist
-OutputBaseFilename=Spendly-{#AppVersion}-Setup
+OutputBaseFilename=Spendly-{#AppVersion}{#OutputSuffix}
 SetupIconFile=icon.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 Compression=lzma2/max
@@ -40,7 +48,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\dist\Spendly\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+#ifndef LiteUpdate
 Source: "MicrosoftEdgeWebView2RuntimeInstallerX64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall; Check: not WebView2Installed
+#endif
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
@@ -48,7 +58,9 @@ Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+#ifndef LiteUpdate
 Filename: "{tmp}\MicrosoftEdgeWebView2RuntimeInstallerX64.exe"; Parameters: "/silent /install"; StatusMsg: "Installing the WebView2 runtime (offline)..."; Flags: waituntilterminated; Check: not WebView2Installed
+#endif
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
 
 [Code]

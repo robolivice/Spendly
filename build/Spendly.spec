@@ -60,7 +60,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=os.path.join(SPEC_DIR, "icon.ico"),
-    version=os.path.join(SPEC_DIR, "version_info.txt"),
+    version=os.path.join(SPEC_DIR, "version_info.generated.txt"),
 )
 
 coll = COLLECT(

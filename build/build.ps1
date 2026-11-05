@@ -10,22 +10,46 @@ $ErrorActionPreference = "Stop"
 $BuildDir = $PSScriptRoot
 $RepoDir = Split-Path -Parent $BuildDir
 $AppDir = Join-Path $RepoDir "Spendly"
+$PathsFile = Join-Path $AppDir "paths.py"
 $DistDir = Join-Path $RepoDir "dist"
 $VenvDir = Join-Path $RepoDir ".venv"
 $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
 $SpecFile = Join-Path $BuildDir "Spendly.spec"
 $IssFile = Join-Path $BuildDir "installer.iss"
 $AppIcon = Join-Path $BuildDir "icon.ico"
+$VersionTemplate = Join-Path $BuildDir "version_info.template.txt"
+$VersionInfo = Join-Path $BuildDir "version_info.generated.txt"
 $WebView2Installer = Join-Path $BuildDir "MicrosoftEdgeWebView2RuntimeInstallerX64.exe"
 $WebView2Url = "https://go.microsoft.com/fwlink/?linkid=2124701"
-$Version = "1.0.0"
+$Utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
 
-if ($SkipVenv) {
+$VersionSource = [IO.File]::ReadAllText($PathsFile)
+$VersionMatch = [regex]::Match($VersionSource, '(?m)^APP_VERSION\s*=\s*"([0-9]+\.[0-9]+\.[0-9]+)"')
+if (-not $VersionMatch.Success) {
+    throw "APP_VERSION was not found in $PathsFile."
+}
+$Version = $VersionMatch.Groups[1].Value
+$VersionParts = $Version.Split(".")
+$VersionQuad = "{0}.{1}.{2}.0" -f $VersionParts[0], $VersionParts[1], $VersionParts[2]
+$VersionTuple = "{0}, {1}, {2}, 0" -f $VersionParts[0], $VersionParts[1], $VersionParts[2]
+
+if ($SkipVenv -and -not (Test-Path $VenvPython)) {
     $VenvPython = (Get-Command python -ErrorAction Stop).Source
 }
 
 function Write-Step([string]$Message) {
     Write-Host "==> $Message" -ForegroundColor Cyan
+}
+
+function Invoke-Iscc([string[]]$ExtraArgs, [string]$Label) {
+    $Attempt = 0
+    while ($true) {
+        $Attempt += 1
+        & $Iscc @ExtraArgs $IssFile
+        if ($LASTEXITCODE -eq 0) { return }
+        if ($Attempt -ge 2) { throw "Inno Setup failed for the $Label installer." }
+        Start-Sleep -Seconds 2
+    }
 }
 
 if (-not $SkipVenv) {
@@ -55,6 +79,12 @@ if (-not $SkipIcon) {
     if (-not (Test-Path $AppIcon)) { throw "App icon not found at $AppIcon." }
     Copy-Item $AppIcon (Join-Path $AppDir "assets\Spendly.ico") -Force
 }
+
+Write-Step "Generating version metadata for $Version"
+if (-not (Test-Path $VersionTemplate)) { throw "Version template not found at $VersionTemplate." }
+$TemplateText = [IO.File]::ReadAllText($VersionTemplate)
+$VersionText = $TemplateText.Replace("@VERSION_TUPLE@", $VersionTuple).Replace("@VERSION_QUAD@", $VersionQuad).Replace("@VERSION@", $Version)
+[IO.File]::WriteAllText($VersionInfo, $VersionText, $Utf8NoBom)
 
 Write-Step "Cleaning previous output"
 foreach ($path in @($DistDir, (Join-Path $BuildDir "pyinstaller"), (Join-Path $BuildDir "portable"))) {
@@ -106,11 +136,13 @@ if (-not $SkipInstaller) {
             }
         }
 
-        Write-Step "Building installer"
-        & $Iscc $IssFile
-        if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed." }
+        Write-Step "Building full installer"
+        Invoke-Iscc -ExtraArgs @("/DAppVersion=$Version") -Label "full"
+
+        Write-Step "Building update installer"
+        Invoke-Iscc -ExtraArgs @("/DAppVersion=$Version", "/DLiteUpdate=1") -Label "update"
     } else {
-        Write-Warning "Inno Setup (ISCC.exe) not found. Install it from https://jrsoftware.org/isinfo.php to build the installer."
+        Write-Warning "Inno Setup (ISCC.exe) not found. Install it from https://jrsoftware.org/isinfo.php to build the installers."
     }
 }
 

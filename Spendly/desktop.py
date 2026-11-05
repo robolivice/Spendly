@@ -6,12 +6,15 @@ import logging
 import os
 import socket
 import sys
+import threading
+import webbrowser
 from datetime import date, datetime
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import paths
 import settings
+import updates
 
 APP_TITLE = paths.WINDOW_TITLE
 PORT = 47821
@@ -193,6 +196,16 @@ def _current_window():
     return webview.windows[0] if webview.windows else None
 
 
+def _close_window():
+    window = _current_window()
+    if window is None:
+        return
+    try:
+        window.destroy()
+    except Exception:
+        log.exception("Could not close the window for an update")
+
+
 def write_csv(destination: Path) -> Path:
     import db
 
@@ -302,6 +315,40 @@ class DesktopApi:
         import_database(_current_window())
         return True
 
+    def update_status(self) -> dict:
+        return updates.manager.status()
+
+    def check_for_updates(self, manual: bool = True) -> dict:
+        return updates.manager.check(manual=bool(manual))
+
+    def set_update_consent(self, allowed: bool) -> dict:
+        return updates.manager.set_consent(bool(allowed))
+
+    def postpone_update(self) -> dict:
+        return updates.manager.postpone()
+
+    def skip_update(self, version: str) -> dict:
+        return updates.manager.skip(version)
+
+    def download_update(self) -> dict:
+        return updates.manager.start_download()
+
+    def cancel_update_download(self) -> dict:
+        return updates.manager.cancel_download()
+
+    def install_update(self) -> dict:
+        ok, message = updates.manager.install()
+        if ok:
+            threading.Timer(0.8, _close_window).start()
+        return {"ok": ok, "message": message}
+
+    def clear_update_error(self) -> dict:
+        return updates.manager.clear_error()
+
+    def open_release_page(self, url: str | None = None) -> bool:
+        webbrowser.open(updates.manager.release_url(url))
+        return True
+
 
 def main() -> int:
     if "--version" in sys.argv:
@@ -386,6 +433,7 @@ def main() -> int:
             storage_path=str(paths.webview_dir()),
             icon=str(paths.resource_path("assets", "Spendly.ico")),
             debug=bool(os.environ.get("SPENDLY_DEBUG")),
+            func=updates.manager.start,
         )
         log.info("Spendly closed")
         return 0

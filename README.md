@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/stars/robolivice/spendly?style=flat-square&logo=github&label=Stars&color=7c9cff" alt="GitHub stars">
   </a>
   <a href="https://github.com/robolivice/spendly/releases">
-    <img src="https://img.shields.io/badge/Version-1.0.0-7c9cff?style=flat-square" alt="Spendly 1.0.0">
+    <img src="https://img.shields.io/badge/Version-1.1.0-7c9cff?style=flat-square" alt="Spendly 1.1.0">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-3da639?style=flat-square" alt="MIT License">
@@ -47,7 +47,7 @@ Spendly does one job well: making a monthly budget easy to live with. Everything
 - **Focused expense entry.** Record a date, category, amount, and optional description. Sort the transaction table by date, category, amount, or description, and remove mistakes in one click.
 - **History worth reviewing.** Browse saved periods by year, compare spending against limits, and see which months finished on track, near the limit, or over budget.
 - **Ten complete themes.** Switch between light and dark interfaces with distinct layouts, typography, and component styling. Every theme is responsive and available from the built-in gallery.
-- **Local-first and private.** No account, no cloud, no telemetry, and no outbound network access. The app binds to `127.0.0.1` only and stores everything in SQLite.
+- **Local-first and private.** No account, no cloud, and no telemetry. The web app makes no outbound network requests; desktop update checks are opt-in. The app binds to `127.0.0.1` only and stores everything in SQLite.
 - **Desktop-ready.** The Windows build adds single-instance behavior, remembered window geometry, CSV export, validated database imports, safety backups, and a fully offline installer.
 
 ## Themes
@@ -114,14 +114,15 @@ Prebuilt 64-bit Windows releases are available on the [Releases page](https://gi
 
 | Build | Description |
 | :--- | :--- |
-| **Installer** (`Spendly-1.0.0-Setup.exe`) | Recommended for most people on 64-bit Windows 10 or 11. Per-user install to `%LOCALAPPDATA%\Programs\Spendly`, a Start Menu shortcut, and an optional desktop shortcut. The installer is fully offline and bundles the WebView2 runtime installer, so it is about 221 MB. |
-| **Portable** (`Spendly-1.0.0-portable.zip`) | Extract and run `Spendly.exe`. The database, backups, settings, and logs stay in `data\` beside the executable. About 17 MB. |
+| **Installer** (`Spendly-<version>-Setup.exe`) | Recommended for most people on 64-bit Windows 10 or 11. Per-user install to `%LOCALAPPDATA%\Programs\Spendly`, a Start Menu shortcut, and an optional desktop shortcut. The installer is fully offline and bundles the WebView2 runtime installer, so it is about 221 MB. |
+| **Portable** (`Spendly-<version>-portable.zip`) | Extract and run `Spendly.exe`. The database, backups, settings, and logs stay in `data\` beside the executable. About 17 MB. |
 
 The desktop build wraps the same Flask app in a native pywebview window and adds:
 
 - Single-instance behavior. Launching Spendly again focuses the running window.
 - Remembered window size and position.
 - **Export CSV** and **Import database** actions in the header.
+- Optional update checks against GitHub releases, with a themed update banner, download progress, SHA-256 verification, and automatic restart after installation. Portable builds keep their `data\` folder.
 - Foreground native dialogs for import confirmation, rejection, success, and export results.
 - Startup database snapshots in `backups\`, with the newest 10 kept.
 - Schema validation before an import replaces anything. Extra tables and columns are allowed, so databases from newer Spendly versions remain compatible.
@@ -142,9 +143,7 @@ All modes keep their state in one data directory:
 
 Override the location with the `SPENDLY_DATA_DIR` environment variable. Uninstalling Spendly leaves your data in place.
 
-Spendly never binds beyond `127.0.0.1` and makes no outbound network requests. Release builds are unsigned, so Windows SmartScreen may show an "Unknown publisher" warning.
-
-For desktop architecture, data locations, installer details, and the release checklist, see [DESKTOP.md](DESKTOP.md).
+Spendly never binds beyond `127.0.0.1`. The web app makes no outbound network requests. The desktop app contacts GitHub only when you enable automatic update checks or click the update button; you can turn automatic checks off at any time. No analytics or telemetry are used. Release builds are unsigned, so Windows SmartScreen may show an "Unknown publisher" warning.
 
 ## Build from source
 
@@ -154,13 +153,14 @@ The packaging pipeline targets Windows. Build the executable, portable zip, and 
 powershell -ExecutionPolicy Bypass -File build/build.ps1
 ```
 
-The build script installs development dependencies, packages the app with PyInstaller, creates the portable archive, and compiles the Inno Setup installer when Inno Setup 6 is installed. It also downloads the WebView2 Evergreen Standalone Installer when needed.
+The build script installs development dependencies, packages the app with PyInstaller, creates the portable archive, and compiles both Inno Setup installers when Inno Setup 6 is installed. It also downloads the WebView2 Evergreen Standalone Installer when needed.
 
 | Output | Contents |
 | :--- | :--- |
 | `dist/Spendly/Spendly.exe` | One-folder application build |
-| `dist/Spendly-1.0.0-portable.zip` | Portable build with data stored beside the executable |
-| `dist/Spendly-1.0.0-Setup.exe` | Offline Windows installer |
+| `dist/Spendly-<version>-portable.zip` | Portable build with data stored beside the executable |
+| `dist/Spendly-<version>-Setup.exe` | Offline Windows installer with the WebView2 runtime |
+| `dist/Spendly-<version>-Update.exe` | Lite installer used by in-app updates |
 
 Individual steps can be skipped with `-SkipVenv`, `-SkipIcon`, or `-SkipInstaller`.
 
@@ -170,22 +170,23 @@ Individual steps can be skipped with `-SkipVenv`, `-SkipIcon`, or `-SkipInstalle
 Spendly/
 |-- app.py               Flask routes and page rendering
 |-- desktop.py           pywebview host, CSV export, database import
+|-- updates.py           GitHub release checks, downloads, and updates
 |-- db.py                SQLite schema and queries
 |-- cycles.py            Budget period calculations
 |-- migration.py         First-run import, validation, backups
 |-- theme_catalog.py     Theme definitions and metadata
-|-- paths.py             Data, resource, and log locations
-|-- settings.py          Persistent settings and window state
+|-- paths.py             Version, data, resource, and log locations
+|-- settings.py          Persistent settings, update preferences, and window state
 |-- requirements.txt     Runtime dependencies
 |-- requirements-dev.txt Development and build dependencies
 |-- templates/           Jinja pages
 |-- static/
 |   |-- themes/          Per-theme stylesheets
 |   |-- img/themes/      Desktop and mobile theme screenshots
-|   `-- js/              Theme, gallery, and dashboard behavior
+|   `-- js/              Theme, gallery, dashboard, and update behavior
+|-- tests/               Updater unit tests
 `-- assets/              Application icon and logo
 build/                   PyInstaller, portable, and Inno Setup build files
-DESKTOP.md               Desktop architecture and release checklist
 CHANGELOG.md             Release history
 LICENSE                  MIT License
 ```

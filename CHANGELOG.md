@@ -5,7 +5,35 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.0]
+
+Desktop update notifications, one-click updates, and a lighter updater download.
+
+### Added
+
+- **Update notifications.** After a one-time consent prompt, the desktop app
+  checks GitHub once a day for a newer release and shows a themed banner and
+  dialog with the version and release notes.
+- **One-click updates.** Download the update inside the app, verify its
+  SHA-256 digest, install it after Spendly exits, and relaunch automatically.
+- **Portable updates.** Portable builds download and unpack the portable zip
+  while keeping the `data\` folder intact.
+- **Lite update installer.** Existing installs download a separate
+  `Spendly-<version>-Update.exe` without the bundled WebView2 runtime,
+  reducing the update from about 221 MB to about 16 MB.
+- **Release tooling.** `build/release.ps1` builds all artifacts, tags the
+  release, publishes it to GitHub, and verifies the uploaded asset names.
+
+### Changed
+
+- Update checks are opt-in on first launch, and the setting can be changed
+  later from the update dialog.
+
+### Security
+
+- Update checks send only the app version and the request IP address to GitHub.
+- Downloaded updates are verified against the SHA-256 digest published by
+  GitHub before the installer or portable package is used.
 
 ## [1.0.0] - 2026-11-05
 
@@ -88,5 +116,5 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
-[Unreleased]: https://github.com/robolivice/spendly/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/robolivice/spendly/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/robolivice/spendly/releases/tag/v1.0.0
