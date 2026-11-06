@@ -36,6 +36,65 @@
         <p class="small">Applies to every profile and saved period.</p>
     </article>
 
+    <article class="card settings-card span-2 category-settings-card" id="categories">
+        <div class="card-head">
+            <div>
+                <h2>Categories &amp; budgets</h2>
+                <span class="muted">Organize spending and set a budget for each category.</span>
+            </div>
+            <span class="badge">{{ categories|length }} {{ 'category' if categories|length == 1 else 'categories' }}</span>
+        </div>
+        <div class="category-list">
+            {% for item in categories %}
+            <form action="{{ url_for('category_update', category_id=item.id) }}" method="post" class="category-row">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <div class="category-row-head">
+                    <span class="cat-dot" style="--cat: {{ item.css_color }}" aria-hidden="true"></span>
+                    <label class="field field-grow">Name
+                        <input type="text" name="name" value="{{ item.name }}" maxlength="40" required>
+                    </label>
+                </div>
+                <div class="category-row-controls">
+                    <label class="field">Color
+                        <select name="color">
+                            {% for option in category_color_options %}
+                            <option value="{{ option.token }}" {% if option.token == item.color %}selected{% endif %}>{{ option.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="field">Budget ({{ currency_info['symbol'] }}, optional)
+                        <input type="number" name="budget" min="0" step="0.01" placeholder="No budget"{% if item.budget is not none %} value="{{ item.budget }}"{% endif %}>
+                    </label>
+                    <button class="btn btn-ghost btn-sm" type="submit">Save</button>
+                    <button class="btn btn-danger btn-sm" type="submit" formaction="{{ url_for('category_delete', category_id=item.id) }}" data-confirm="Delete this category?">Delete</button>
+                </div>
+                <p class="small category-row-meta">
+                    {{ item.spent|money }} spent this period
+                    {% if item.budget is not none %}· {{ "%.0f"|format(item.budget_percent) }}% of {{ item.budget|money }}{% if item.remaining is not none %} · {{ item.remaining|money }} left{% endif %}{% endif %}
+                </p>
+            </form>
+            {% endfor %}
+        </div>
+        <form action="{{ url_for('category_add') }}" method="post" class="inline-form category-add-form">
+            <input type="hidden" name="next" value="{{ request.full_path }}">
+            <label class="field field-grow">New category
+                <input type="text" name="name" maxlength="40" placeholder="Pets, Health, Education..." required>
+            </label>
+            <label class="field">Color
+                <select name="color">
+                    {% for option in category_color_options %}
+                    <option value="{{ option.token }}"{% if loop.index == 6 %} selected{% endif %}>{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">Budget ({{ currency_info['symbol'] }})
+                <input type="number" name="budget" min="0" step="0.01" placeholder="No budget">
+            </label>
+            <button class="btn btn-primary" type="submit">Add category</button>
+        </form>
+        <p class="small">Budgets apply to each period. Categories with expenses cannot be deleted.</p>
+    </article>
+
     {% if is_desktop %}
     <article class="card settings-card">
         <div class="card-head">
@@ -146,6 +205,11 @@
             </div>
         </div>
         <div class="theme-grid" role="radiogroup" aria-label="Theme">
+            <label class="theme-option">
+                <input type="radio" name="theme-choice" value="system">
+                <span class="theme-swatch theme-swatch-system" aria-hidden="true"></span>
+                <span class="theme-copy"><strong>System</strong><small>Follows your device light or dark preference.</small></span>
+            </label>
             {% for theme in themes %}
             <label class="theme-option">
                 <input type="radio" name="theme-choice" value="{{ theme.id }}">

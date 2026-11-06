@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-variant="{{ default_theme }}">
+<html lang="en" data-variant="{{ default_theme }}" data-system-light="{{ system_light_theme }}" data-system-dark="{{ system_dark_theme }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,9 +9,17 @@
         (function () {
             var allowed = {{ theme_ids|tojson }};
             var variant = {{ default_theme|tojson }};
+            var systemLight = {{ system_light_theme|tojson }};
+            var systemDark = {{ system_dark_theme|tojson }};
             try {
                 var saved = localStorage.getItem("spendly.theme");
-                if (saved && allowed.indexOf(saved) !== -1) variant = saved;
+                if (saved === "system") {
+                    variant = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+                        ? systemLight
+                        : systemDark;
+                } else if (saved && allowed.indexOf(saved) !== -1) {
+                    variant = saved;
+                }
             } catch (error) {}
             document.documentElement.setAttribute("data-variant", variant);
         })();
@@ -130,6 +138,7 @@
                 <label class="theme-picker">
                     <span class="sr-only">Theme</span>
                     <select id="theme-select" class="theme-select">
+                        <option value="system">System</option>
                         {% for theme in themes %}
                         <option value="{{ theme.id }}">{{ theme.name }}</option>
                         {% endfor %}
@@ -216,11 +225,9 @@
                 </label>
                 <label class="field">Category
                     <select name="category" id="expense-dialog-category">
-                        <option>Food</option>
-                        <option>Transport</option>
-                        <option>Shopping</option>
-                        <option>Bills</option>
-                        <option>Other</option>
+                        {% for category in categories %}
+                        <option value="{{ category['name'] }}">{{ category['name'] }}</option>
+                        {% endfor %}
                     </select>
                 </label>
                 <label class="field">Amount ({{ currency_info['symbol'] }})

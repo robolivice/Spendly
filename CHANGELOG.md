@@ -5,6 +5,40 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+
+Spending insights, custom categories, category budgets, and system theme support.
+
+### Added
+
+- **Category breakdown.** The dashboard now shows a donut chart and legend for
+  spending by category, with theme-aware colors and per-category expense counts.
+- **Pacing insights.** A cumulative spending chart compares actual spending with
+  the ideal pace and reports safe-to-spend per day, daily burn rate, projected
+  total, and days left in the period.
+- **Custom categories.** Add, rename, recolor, and delete categories from
+  Settings. Existing expense categories are adopted automatically, and
+  categories that still have expenses cannot be deleted.
+- **Category budgets.** Set an optional budget for each category. The dashboard
+  and Settings show progress, budget percentage, and the amount remaining for
+  the selected period.
+- **System theme.** The theme picker now includes a System option that follows
+  the operating system's light or dark preference, using Light SaaS and Dark
+  Fintech respectively.
+
+### Changed
+
+- Category badges throughout the dashboard and search results now use the
+  selected theme's category colors.
+- Settings now combines category and budget management with the existing
+  period, currency, appearance, and update controls.
+
+### Notes
+
+- Existing databases upgrade automatically. A new `categories` table is created
+  and seeded with the default categories, and category names already present in
+  expenses are added to each profile's category list.
+
 ## [1.2.1]
 
 Fixes in-app updates failing to launch their installer or restart the app.
@@ -161,6 +195,7 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
+[1.3.0]: https://github.com/robolivice/spendly/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/robolivice/spendly/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/robolivice/spendly/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/robolivice/spendly/compare/v1.0.0...v1.1.0

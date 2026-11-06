@@ -15,6 +15,7 @@ import app as app_module
 import currency
 import cycles
 import db
+import insights
 import settings
 
 
@@ -191,6 +192,287 @@ class FeatureTests(unittest.TestCase):
         page = self.client.get(location).get_data(as_text=True)
         self.assertIn("Search", page)
         self.assertIn("Expense deleted.", page)
+
+    def test_default_categories_seeded(self):
+        names = [row["name"] for row in db.getCategories(self.pid)]
+        self.assertEqual(names, ["Food", "Transport", "Shopping", "Bills", "Other"])
+
+    def test_existing_expense_categories_are_adopted(self):
+        db.save(self.pid, self.today.isoformat(), "Pets", 15, "Cat food")
+        db.setup()
+        names = [row["name"] for row in db.getCategories(self.pid)]
+        self.assertIn("Pets", names)
+        self.assertEqual(len(names), 6)
+
+    def test_existing_expense_categories_match_case_insensitively(self):
+        db.save(self.pid, self.today.isoformat(), "food", 9, "Snack")
+        db.setup()
+        names = [row["name"] for row in db.getCategories(self.pid)]
+        self.assertEqual(names.count("Food"), 1)
+        self.assertNotIn("food", names)
+        rows = db.getPeriodExpenses(
+            self.pid,
+            self.today.replace(day=1).isoformat(),
+            self.today.isoformat(),
+        )
+        snack = next(item for item in rows if item["description"] == "Snack")
+        self.assertEqual(snack["category"], "Food")
+
+    def test_category_crud(self):
+        response = self.client.post(
+            "/categories/add",
+            data={
+                "name": "Pets",
+                "color": "accent",
+                "budget": "120",
+                "next": "/period/settings",
+            },
+            follow_redirects=True,
+        )
+        self.assertIn("Category added.", response.get_data(as_text=True))
+        categories = {row["name"]: row for row in db.getCategories(self.pid)}
+        self.assertEqual(categories["Pets"]["budget"], 120)
+        self.assertEqual(categories["Pets"]["color"], "accent")
+
+        duplicate = self.client.post(
+            "/categories/add",
+            data={
+                "name": "food",
+                "color": "accent",
+                "budget": "",
+                "next": "/period/settings",
+            },
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        self.assertIn("already exists", duplicate)
+        self.assertEqual(len(db.getCategories(self.pid)), 6)
+
+        category_id = categories["Pets"]["id"]
+        saved = self.client.post(
+            f"/categories/{category_id}/update",
+            data={
+                "name": "Pet care",
+                "color": "ok",
+                "budget": "150",
+                "next": "/period/settings",
+            },
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        self.assertIn("Category saved.", saved)
+        updated = db.getCategory(self.pid, category_id)
+        self.assertEqual(updated["name"], "Pet care")
+        self.assertEqual(updated["budget"], 150)
+        self.assertEqual(updated["color"], "ok")
+
+    def test_category_rename_updates_expenses(self):
+        eid = self.add_expense(category="Food")
+        category = {row["name"]: row for row in db.getCategories(self.pid)}["Food"]
+        response = self.client.post(
+            f"/categories/{category['id']}/update",
+            data={
+                "name": "Dining",
+                "color": "cat-food",
+                "budget": "",
+                "next": "/period/settings",
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(db.getExpense(self.pid, eid)["category"], "Dining")
+        page = self.client.get("/dashboard").get_data(as_text=True)
+        self.assertIn("Dining", page)
+
+    def test_category_delete_rules(self):
+        self.add_expense(category="Food")
+        rows = {row["name"]: row for row in db.getCategories(self.pid)}
+        used = self.client.post(
+            f"/categories/{rows['Food']['id']}/delete",
+            data={"next": "/period/settings"},
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        self.assertIn("still has expenses", used)
+        deleted = self.client.post(
+            f"/categories/{rows['Shopping']['id']}/delete",
+            data={"next": "/period/settings"},
+            follow_redirects=True,
+        ).get_data(as_text=True)
+        self.assertIn("Category deleted.", deleted)
+        names = [row["name"] for row in db.getCategories(self.pid)]
+        self.assertIn("Food", names)
+        self.assertNotIn("Shopping", names)
+
+        second = db.createProfile("Second")
+        second_rows = db.getCategories(second)
+        for row in second_rows[:-1]:
+            self.assertEqual(db.deleteCategory(second, row["id"]), "ok")
+        self.assertEqual(db.deleteCategory(second, second_rows[-1]["id"]), "last")
+
+    def test_custom_category_on_expense(self):
+        self.client.post(
+            "/categories/add",
+            data={
+                "name": "Pets",
+                "color": "cat-transport",
+                "budget": "",
+                "next": "/period/settings",
+            },
+        )
+        self.client.post(
+            "/expense/add",
+            data={
+                "date": self.today.isoformat(),
+                "category": "Pets",
+                "amount": "25",
+                "description": "Cat food",
+            },
+        )
+        self.client.post(
+            "/expense/add",
+            data={
+                "date": self.today.isoformat(),
+                "category": "Unknown",
+                "amount": "5",
+                "description": "Mystery",
+            },
+        )
+        rows = db.getPeriodExpenses(
+            self.pid,
+            self.today.replace(day=1).isoformat(),
+            self.today.isoformat(),
+        )
+        categories = [item["category"] for item in rows]
+        self.assertIn("Pets", categories)
+        self.assertIn("Other", categories)
+
+    def test_category_budget_and_insights_render(self):
+        category = {row["name"]: row for row in db.getCategories(self.pid)}["Food"]
+        self.client.post(
+            f"/categories/{category['id']}/update",
+            data={
+                "name": "Food",
+                "color": "cat-food",
+                "budget": "120",
+                "next": "/period/settings",
+            },
+        )
+        self.add_expense(category="Food", amount=96, description="Groceries")
+        page = self.client.get("/dashboard").get_data(as_text=True)
+        self.assertIn("By category", page)
+        self.assertIn("Spending pace", page)
+        self.assertIn("Safe to spend / day", page)
+        self.assertIn("80% of", page)
+        self.assertIn("donut-seg", page)
+        self.assertIn("legend-item", page)
+
+    def test_insights_pacing(self):
+        start = date(2026, 1, 1)
+        end = date(2026, 1, 10)
+        today = date(2026, 1, 5)
+        result = insights.pacing(start, end, 300, 1000, today)
+        self.assertEqual(result["total_days"], 10)
+        self.assertEqual(result["elapsed_days"], 5)
+        self.assertEqual(result["days_left"], 5)
+        self.assertEqual(result["safe_per_day"], 140)
+        self.assertEqual(result["burn_rate"], 60)
+        self.assertEqual(result["projected"], 600)
+        self.assertEqual(result["expected"], 500)
+        self.assertEqual(result["pace_delta"], -200)
+        self.assertTrue(result["on_pace"])
+        self.assertEqual(result["projection_status"], "ok")
+
+        over = insights.pacing(start, end, 900, 1000, date(2026, 1, 3))
+        self.assertEqual(over["days_left"], 7)
+        self.assertEqual(over["burn_rate"], 300)
+        self.assertEqual(over["projected"], 3000)
+        self.assertEqual(over["pace_delta"], 600)
+        self.assertFalse(over["on_pace"])
+        self.assertEqual(over["projection_status"], "over")
+
+        no_limit = insights.pacing(start, end, 50, None, today)
+        self.assertIsNone(no_limit["safe_per_day"])
+        self.assertIsNone(no_limit["remaining"])
+        self.assertEqual(no_limit["projection_status"], "none")
+
+    def test_insights_series_chart_and_donut(self):
+        start = date(2026, 1, 1)
+        end = date(2026, 1, 10)
+        today = date(2026, 1, 5)
+        expenses = [
+            {"date": "2026-01-01", "amount": 10},
+            {"date": "2026-01-03", "amount": 5},
+            {"date": "2026-01-06", "amount": 99},
+        ]
+        series = insights.daily_series(expenses, start, end, today)
+        self.assertEqual(series, [10, 10, 15, 15, 15])
+        ideal = insights.ideal_series(1000, 10, 5)
+        self.assertEqual(ideal, [100, 200, 300, 400, 500])
+        geometry = insights.pace_geometry(series, ideal)
+        self.assertEqual(len(geometry["grid"]), 3)
+        self.assertTrue(geometry["actual"])
+        self.assertTrue(geometry["area"])
+        self.assertIsNotNone(geometry["last"])
+
+        donut = insights.donut_geometry(
+            [
+                {"name": "Food", "value": 60, "css_color": "var(--cat-food)"},
+                {"name": "Transport", "value": 40, "css_color": "var(--cat-transport)"},
+            ]
+        )
+        self.assertEqual(len(donut["segments"]), 2)
+        self.assertEqual(donut["segments"][0]["label"], "Food")
+        self.assertEqual(donut["segments"][0]["color"], "var(--cat-food)")
+        self.assertTrue(donut["segments"][0]["dasharray"])
+
+    def test_category_breakdown_budgets(self):
+        categories = [
+            {
+                "id": 1,
+                "name": "Food",
+                "color": "cat-food",
+                "css_color": "var(--cat-food)",
+                "budget": 100,
+            },
+            {
+                "id": 2,
+                "name": "Bills",
+                "color": "cat-bills",
+                "css_color": "var(--cat-bills)",
+                "budget": None,
+            },
+        ]
+        rows = insights.category_breakdown(
+            categories, {"Food": 85, "Bills": 15}, 100, {"Food": 3, "Bills": 1}
+        )
+        food = next(row for row in rows if row["name"] == "Food")
+        bills = next(row for row in rows if row["name"] == "Bills")
+        self.assertEqual(food["status"], "warn")
+        self.assertEqual(food["budget_percent"], 85)
+        self.assertEqual(food["remaining"], 15)
+        self.assertEqual(food["count"], 3)
+        self.assertEqual(bills["status"], "none")
+        self.assertIsNone(bills["budget_percent"])
+        self.assertEqual(rows[0]["name"], "Food")
+        self.assertEqual(
+            [
+                row["name"]
+                for row in insights.category_breakdown(
+                    list(reversed(categories)),
+                    {"Food": 85, "Bills": 15},
+                    100,
+                    {},
+                    sort_items=False,
+                )
+            ],
+            ["Bills", "Food"],
+        )
+
+    def test_system_theme_option(self):
+        page = self.client.get("/period/settings").get_data(as_text=True)
+        self.assertIn('value="system"', page)
+        self.assertIn('data-system-light="saas"', page)
+        self.assertIn('data-system-dark="fintech"', page)
+        self.assertIn("Follows your device light or dark preference.", page)
+        self.assertEqual(app_module.theme_catalog.SYSTEM_LIGHT_THEME, "saas")
+        self.assertEqual(app_module.theme_catalog.SYSTEM_DARK_THEME, "fintech")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 import currency
 import cycles
 import db
+import insights
 import paths
 import settings
 import theme_catalog
@@ -27,6 +28,118 @@ DESKTOP_MODE = bool(os.environ.get("SPENDLY_DESKTOP"))
 
 db.setup()
 
+CATEGORY_COLORS = {
+    "cat-food": "var(--cat-food)",
+    "cat-transport": "var(--cat-transport)",
+    "cat-shopping": "var(--cat-shopping)",
+    "cat-bills": "var(--cat-bills)",
+    "cat-other": "var(--cat-other)",
+    "accent": "var(--accent)",
+    "accent-2": "var(--accent-2)",
+    "ok": "var(--ok)",
+    "warn": "var(--warn)",
+    "over": "var(--over)",
+}
+
+CATEGORY_COLOR_OPTIONS = (
+    ("cat-food", "Amber"),
+    ("cat-transport", "Sky"),
+    ("cat-shopping", "Violet"),
+    ("cat-bills", "Rose"),
+    ("cat-other", "Slate"),
+    ("accent", "Accent"),
+    ("accent-2", "Accent 2"),
+    ("ok", "Green"),
+    ("warn", "Gold"),
+    ("over", "Red"),
+)
+
+
+def category_color(token):
+    return CATEGORY_COLORS.get(token, CATEGORY_COLORS["cat-other"])
+
+
+def category_view(row):
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "color": row["color"],
+        "css_color": category_color(row["color"]),
+        "budget": row["budget"],
+        "position": row["position"],
+    }
+
+
+def parse_category_budget(raw):
+    value = (raw or "").strip()
+    if not value:
+        return None
+    amount = float(value)
+    if amount < 0:
+        raise ValueError
+    return round(amount, 2)
+
+
+def normalize_category_name(raw):
+    value = " ".join((raw or "").split())
+    if not value:
+        return None
+    return value[:40]
+
+
+def choose_category(pid, raw):
+    rows = db.getCategories(pid)
+    names = [row["name"] for row in rows]
+    if raw in names:
+        return raw
+    if "Other" in names:
+        return "Other"
+    return names[0] if names else "Other"
+
+
+def category_spending(pid, start, end):
+    if start is None or end is None:
+        return {}, {}
+    rows = db.getCategorySpending(pid, start, end)
+    return (
+        {row["category"]: row["spent"] for row in rows},
+        {row["category"]: row["count"] for row in rows},
+    )
+
+
+def build_insights(pid, period, expenses, categories, today):
+    start = date.fromisoformat(period["start_date"])
+    end = date.fromisoformat(period["end_date"])
+    spent = period["spent"]
+    limit = period["limit"]
+    pacing = insights.pacing(start, end, spent, limit, today)
+    cumulative = insights.daily_series(expenses, start, end, today)
+    ideal = insights.ideal_series(limit, pacing["total_days"], len(cumulative))
+    chart = insights.pace_geometry(cumulative, ideal)
+    spending, counts = category_spending(pid, period["start_date"], period["end_date"])
+    breakdown = insights.category_breakdown(categories, spending, spent, counts)
+    visible = [item for item in breakdown if item["spent"] > 0]
+    donut = insights.donut_geometry(
+        [
+            {
+                "name": item["name"],
+                "value": item["spent"],
+                "css_color": item["css_color"],
+            }
+            for item in visible
+        ]
+    )
+    return {
+        "pacing": pacing,
+        "chart": chart,
+        "series": cumulative,
+        "ideal": ideal,
+        "breakdown": breakdown,
+        "visible": visible,
+        "donut": donut,
+    }
+
+
 
 def active_currency():
     return currency.normalize(settings.get("currency"))
@@ -46,6 +159,21 @@ def inject_preferences():
         "currency_options": [
             currency.CURRENCIES[item] for item in currency.CURRENCY_CODES
         ],
+    }
+
+
+@app.context_processor
+def inject_categories():
+    pid = session.get("pid")
+    if pid is None:
+        return {"categories": [], "category_colors": {}}
+    rows = db.getCategories(pid)
+    views = [category_view(row) for row in rows]
+    return {
+        "categories": views,
+        "category_colors": {
+            item["name"]: item["css_color"] for item in views
+        },
     }
 
 
@@ -71,6 +199,8 @@ def inject_themes():
         "default_theme_meta": theme_catalog.THEMES_BY_ID[
             theme_catalog.DEFAULT_THEME
         ]["meta_color"],
+        "system_light_theme": theme_catalog.SYSTEM_LIGHT_THEME,
+        "system_dark_theme": theme_catalog.SYSTEM_DARK_THEME,
         "theme_config": [
             {"id": theme["id"], "name": theme["name"], "metaColor": theme["meta_color"]}
             for theme in theme_catalog.THEMES
@@ -307,12 +437,15 @@ def dashboard():
     if direction not in ("asc", "desc"):
         direction = "desc"
     expenses = db.getPeriodExpenses(pid, range_start, range_end, sort, direction)
+    category_views = [category_view(row) for row in db.getCategories(pid)]
+    insight = build_insights(pid, period, expenses, category_views, today)
     return render_template(
         "dashboard.html", profile=profile, cycle=cycle, periods=views, period=period,
         older=older, newer=newer, expenses=expenses, sort=sort, direction=direction,
         range_start=range_start, range_end=range_end, today=today.isoformat(),
         save_state=save_state, save_limit=save_limit, save_target=save_target,
         save_label=save_label, overlap_names=overlap_names, future_default=future_default,
+        insight=insight,
     )
 
 
@@ -342,6 +475,18 @@ def period_settings():
         )
     if period is None and views:
         period = views[0]
+    category_rows = [category_view(row) for row in db.getCategories(pid)]
+    if period is not None:
+        spending, counts = category_spending(
+            pid, period["start_date"], period["end_date"]
+        )
+        category_rows = insights.category_breakdown(
+            category_rows, spending, period["spent"], counts, sort_items=False
+        )
+    else:
+        category_rows = insights.category_breakdown(
+            category_rows, {}, 0, {}, sort_items=False
+        )
     new_start = None
     new_end = None
     if rows:
@@ -352,7 +497,12 @@ def period_settings():
         new_end = previous_end.isoformat()
     return render_template(
         "period_settings.html", profile=profile, cycle=cycle, periods=views,
-        period=period, new_start=new_start, new_end=new_end
+        period=period, new_start=new_start, new_end=new_end,
+        categories=category_rows,
+        category_color_options=[
+            {"token": token, "label": label, "css_color": category_color(token)}
+            for token, label in CATEGORY_COLOR_OPTIONS
+        ],
     )
 
 
@@ -365,6 +515,80 @@ def save_preferences():
     settings.set("currency", code)
     flash("Preferences saved.", "ok")
     return redirect(safe_next(url_for("period_settings")))
+
+
+@app.route("/categories/add", methods=["POST"])
+def category_add():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings"))
+    name = normalize_category_name(request.form.get("name"))
+    if not name:
+        flash("Enter a category name.", "error")
+        return redirect(target)
+    color = request.form.get("color", "")
+    if color not in CATEGORY_COLORS:
+        color = "cat-other"
+    try:
+        budget = parse_category_budget(request.form.get("budget"))
+    except ValueError:
+        flash("Enter a valid category budget.", "error")
+        return redirect(target)
+    if db.addCategory(pid, name, color, budget) is None:
+        flash(f'A category named "{name}" already exists.', "error")
+    else:
+        flash("Category added.", "ok")
+    return redirect(target)
+
+
+@app.route("/categories/<int:category_id>/update", methods=["POST"])
+def category_update(category_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings"))
+    if db.getCategory(pid, category_id) is None:
+        flash("Category not found.", "error")
+        return redirect(target)
+    name = normalize_category_name(request.form.get("name"))
+    if not name:
+        flash("Enter a category name.", "error")
+        return redirect(target)
+    color = request.form.get("color", "")
+    if color not in CATEGORY_COLORS:
+        color = "cat-other"
+    try:
+        budget = parse_category_budget(request.form.get("budget"))
+    except ValueError:
+        flash("Enter a valid category budget.", "error")
+        return redirect(target)
+    updated = db.updateCategory(pid, category_id, name, color, budget)
+    if updated is None:
+        flash("Category not found.", "error")
+    elif not updated:
+        flash(f'A category named "{name}" already exists.', "error")
+    else:
+        flash("Category saved.", "ok")
+    return redirect(target)
+
+
+@app.route("/categories/<int:category_id>/delete", methods=["POST"])
+def category_delete(category_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings"))
+    result = db.deleteCategory(pid, category_id)
+    if result == "ok":
+        flash("Category deleted.", "ok")
+    elif result == "used":
+        flash("That category still has expenses. Move or delete them first.", "error")
+    elif result == "last":
+        flash("Keep at least one category.", "error")
+    else:
+        flash("Category not found.", "error")
+    return redirect(target)
 
 
 @app.route("/search")
@@ -636,7 +860,7 @@ def add():
     if amount < 0:
         flash("The amount cannot be negative.", "error")
         return redirect(url_for("dashboard"))
-    category = request.form.get("category", "Other")
+    category = choose_category(pid, request.form.get("category", "Other"))
     description = request.form.get("description", "").strip()
     db.save(pid, exp_date, category, amount, description)
     db.ensurePeriods(pid)
@@ -676,7 +900,7 @@ def edit_expense(eid):
     if amount < 0:
         flash("The amount cannot be negative.", "error")
         return redirect(safe_next(url_for("dashboard")))
-    category = request.form.get("category", "Other")
+    category = choose_category(pid, request.form.get("category", "Other"))
     description = request.form.get("description", "").strip()
     db.updateExpense(pid, eid, exp_date, category, amount, description)
     db.ensurePeriods(pid)

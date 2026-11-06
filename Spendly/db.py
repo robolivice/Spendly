@@ -9,6 +9,88 @@ import paths
 
 DB = str(paths.db_path())
 
+CATEGORY_COLOR_TOKENS = (
+    "cat-food",
+    "cat-transport",
+    "cat-shopping",
+    "cat-bills",
+    "cat-other",
+    "accent",
+    "accent-2",
+    "ok",
+    "warn",
+    "over",
+)
+
+DEFAULT_CATEGORIES = (
+    ("Food", "cat-food", 0),
+    ("Transport", "cat-transport", 1),
+    ("Shopping", "cat-shopping", 2),
+    ("Bills", "cat-bills", 3),
+    ("Other", "cat-other", 4),
+)
+
+
+def _seed_default_categories(conn, pid):
+    row = conn.execute(
+        "SELECT COUNT(*) FROM categories WHERE profile_id = ?", (pid,)
+    ).fetchone()
+    if row[0]:
+        return
+    for name, color, position in DEFAULT_CATEGORIES:
+        conn.execute(
+            """
+            INSERT INTO categories(profile_id, name, color, budget, position)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (pid, name, color, None, position),
+        )
+
+
+def _adopt_expense_categories(conn, pid):
+    rows = conn.execute(
+        """
+        SELECT category, COUNT(*) AS count FROM expenses
+        WHERE profile_id = ? GROUP BY category ORDER BY category
+        """,
+        (pid,),
+    ).fetchall()
+    existing = {}
+    for row in conn.execute(
+        "SELECT name FROM categories WHERE profile_id = ?", (pid,)
+    ).fetchall():
+        existing[row["name"].casefold()] = row["name"]
+    position = len(existing)
+    index = 0
+    for row in rows:
+        original = row["category"] or ""
+        name = " ".join(original.split())
+        if not name:
+            continue
+        key = name.casefold()
+        if key in existing:
+            canonical = existing[key]
+            if canonical != original:
+                conn.execute(
+                    """
+                    UPDATE expenses SET category = ?
+                    WHERE profile_id = ? AND category = ?
+                    """,
+                    (canonical, pid, original),
+                )
+            continue
+        color = CATEGORY_COLOR_TOKENS[index % len(CATEGORY_COLOR_TOKENS)]
+        conn.execute(
+            """
+            INSERT INTO categories(profile_id, name, color, budget, position)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (pid, name, color, None, position),
+        )
+        existing[key] = name
+        position += 1
+        index += 1
+
 
 def connect():
     Path(DB).parent.mkdir(parents=True, exist_ok=True)
@@ -74,9 +156,21 @@ def setup():
         undone INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
     )""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS categories(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id INTEGER NOT NULL,
+        name TEXT NOT NULL COLLATE NOCASE,
+        color TEXT NOT NULL,
+        budget REAL,
+        position INTEGER NOT NULL DEFAULT 0,
+        UNIQUE(profile_id, name),
+        FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+    )""")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_expenses_profile_date ON expenses(profile_id, date)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_periods_profile_end ON periods(profile_id, end_date)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_actions_profile_undone ON actions(profile_id, undone)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id, position)")
     conn.execute("""
     INSERT OR IGNORE INTO periods(profile_id, start_date, end_date, limit_amount)
     SELECT profile_id, start_date, end_date, amount FROM limits
@@ -90,6 +184,9 @@ def setup():
         end = date.fromisoformat(row["end_date"])
         day = 31 if end.day == calendar.monthrange(end.year, end.month)[1] else end.day
         conn.execute("INSERT OR IGNORE INTO cycles(profile_id, end_day) VALUES (?, ?)", (row["profile_id"], day))
+    for row in conn.execute("SELECT id FROM profiles").fetchall():
+        _seed_default_categories(conn, row["id"])
+        _adopt_expense_categories(conn, row["id"])
     conn.commit()
     conn.close()
 
@@ -113,9 +210,11 @@ def createProfile(name):
     pid = None
     try:
         cur = conn.execute("INSERT INTO profiles(name) VALUES (?)", (name,))
-        conn.commit()
         pid = cur.lastrowid
+        _seed_default_categories(conn, pid)
+        conn.commit()
     except sqlite3.IntegrityError:
+        conn.rollback()
         pid = None
     conn.close()
     return pid
@@ -140,9 +239,129 @@ def deleteProfile(pid):
     conn.execute("DELETE FROM limits WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM periods WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM cycles WHERE profile_id = ?", (pid,))
+    conn.execute("DELETE FROM categories WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM profiles WHERE id = ?", (pid,))
     conn.commit()
     conn.close()
+
+
+def getCategory(pid, category_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, name, color, budget, position FROM categories
+    WHERE id = ? AND profile_id = ?
+    """, (category_id, pid)).fetchone()
+    conn.close()
+    return row
+
+
+def getCategories(pid):
+    conn = connect()
+    rows = conn.execute("""
+    SELECT id, name, color, budget, position FROM categories
+    WHERE profile_id = ? ORDER BY position, name COLLATE NOCASE
+    """, (pid,)).fetchall()
+    conn.close()
+    return rows
+
+
+def addCategory(pid, name, color, budget):
+    conn = connect()
+    row = conn.execute(
+        "SELECT COALESCE(MAX(position), -1) + 1 FROM categories WHERE profile_id = ?",
+        (pid,),
+    ).fetchone()
+    position = row[0]
+    try:
+        cur = conn.execute("""
+        INSERT INTO categories(profile_id, name, color, budget, position)
+        VALUES (?, ?, ?, ?, ?)
+        """, (pid, name, color, budget, position))
+        conn.commit()
+        category_id = cur.lastrowid
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        category_id = None
+    conn.close()
+    return category_id
+
+
+def updateCategory(pid, category_id, name, color, budget):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, name FROM categories WHERE id = ? AND profile_id = ?
+    """, (category_id, pid)).fetchone()
+    if row is None:
+        conn.close()
+        return None
+    previous = row["name"]
+    try:
+        conn.execute("""
+        UPDATE categories SET name = ?, color = ?, budget = ?
+        WHERE id = ? AND profile_id = ?
+        """, (name, color, budget, category_id, pid))
+        if name != previous:
+            conn.execute("""
+            UPDATE expenses SET category = ?
+            WHERE profile_id = ? AND category = ? COLLATE NOCASE
+            """, (name, pid, previous))
+        conn.commit()
+        updated = True
+    except sqlite3.IntegrityError:
+        conn.rollback()
+        updated = False
+    conn.close()
+    return updated
+
+
+def deleteCategory(pid, category_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, name FROM categories WHERE id = ? AND profile_id = ?
+    """, (category_id, pid)).fetchone()
+    if row is None:
+        conn.close()
+        return "missing"
+    total = conn.execute(
+        "SELECT COUNT(*) FROM categories WHERE profile_id = ?", (pid,)
+    ).fetchone()[0]
+    if total <= 1:
+        conn.close()
+        return "last"
+    used = conn.execute("""
+    SELECT 1 FROM expenses WHERE profile_id = ? AND category = ? COLLATE NOCASE LIMIT 1
+    """, (pid, row["name"])).fetchone()
+    if used:
+        conn.close()
+        return "used"
+    conn.execute(
+        "DELETE FROM categories WHERE id = ? AND profile_id = ?", (category_id, pid)
+    )
+    conn.commit()
+    conn.close()
+    return "ok"
+
+
+def setCategoryBudget(pid, category_id, amount):
+    conn = connect()
+    conn.execute(
+        "UPDATE categories SET budget = ? WHERE id = ? AND profile_id = ?",
+        (amount, category_id, pid),
+    )
+    conn.commit()
+    conn.close()
+
+
+def getCategorySpending(pid, start, end):
+    conn = connect()
+    rows = conn.execute("""
+    SELECT category, COALESCE(SUM(amount), 0) AS spent, COUNT(*) AS count
+    FROM expenses
+    WHERE profile_id = ? AND date BETWEEN ? AND ?
+    GROUP BY category
+    """, (pid, start, end)).fetchall()
+    conn.close()
+    return rows
 
 
 def getCycle(pid):

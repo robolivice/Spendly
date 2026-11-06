@@ -82,7 +82,7 @@
                 {% for e in results %}
                 <tr>
                     <td class="nowrap">{{ e['date'] }}</td>
-                    <td><span class="badge cat-badge cat-{{ e['category']|lower }}">{{ e['category'] }}</span></td>
+                    <td><span class="badge cat-badge" style="color: {{ category_colors.get(e['category'], 'var(--cat-other)') }}">{{ e['category'] }}</span></td>
                     <td class="amount">{{ e['amount']|money }}</td>
                     <td>{{ e['description'] or '' }}</td>
                     <td class="actions-cell">

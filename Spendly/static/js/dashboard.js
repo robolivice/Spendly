@@ -1,4 +1,10 @@
 (() => {
+    document.querySelectorAll("[data-confirm]").forEach(control => {
+        control.addEventListener("click", event => {
+            if (!window.confirm(control.dataset.confirm)) event.preventDefault();
+        });
+    });
+
     const profileTitle = document.getElementById("profile-title");
     const renameForm = document.getElementById("rename-form");
     const renameInput = document.getElementById("rename-input");

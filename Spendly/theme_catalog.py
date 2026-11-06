@@ -1,4 +1,6 @@
 DEFAULT_THEME = "fintech"
+SYSTEM_LIGHT_THEME = "saas"
+SYSTEM_DARK_THEME = "fintech"
 
 THEMES = [
     {

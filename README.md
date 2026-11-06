@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/stars/robolivice/spendly?style=flat-square&logo=github&label=Stars&color=7c9cff" alt="GitHub stars">
   </a>
   <a href="https://github.com/robolivice/spendly/releases">
-    <img src="https://img.shields.io/badge/Version-1.2.1-7c9cff?style=flat-square" alt="Spendly 1.2.1">
+    <img src="https://img.shields.io/badge/Version-1.3.0-7c9cff?style=flat-square" alt="Spendly 1.3.0">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-3da639?style=flat-square" alt="MIT License">
@@ -46,8 +46,10 @@ Spendly does one job well: making a monthly budget easy to live with. Everything
 - **Limits that make sense.** Set an optional limit per period, inherit the latest limit into new periods, and see spent, remaining, and pacing status at a glance.
 - **Focused expense entry.** Record a date, category, amount, and optional description. Sort the transaction table by date, category, amount, or description, edit any entry in place, and undo deletions from a toast.
 - **Search that stays close.** Filter the current period as you type, or search descriptions, categories, dates, and amounts across the current period or all saved data.
+- **Spending insights.** See a category donut, compare cumulative spending with the ideal pace, and check safe-to-spend per day, daily burn rate, projected total, and days left in the period.
+- **Custom categories and budgets.** Add, rename, recolor, or remove categories from Settings, and set an optional budget for each one. Existing expenses are adopted into the category list automatically.
 - **Currency-aware totals.** Choose INR, USD, EUR, or GBP in Settings. Every amount, limit, history row, and search result uses the selected currency and locale formatting.
-- **Settings in one place.** Manage saved periods and cycle settings, pick a currency, switch themes, and control desktop update checks from a single page.
+- **Settings in one place.** Manage saved periods and cycle settings, organize categories and budgets, pick a currency, switch themes, and control desktop update checks from a single page.
 - **History worth reviewing.** Browse saved periods by year, compare spending against limits, and see which months finished on track, near the limit, or over budget.
 - **Ten complete themes.** Switch between light and dark interfaces with distinct layouts, typography, and component styling. Every theme is responsive and available from the built-in gallery.
 - **Local-first and private.** No account, no cloud, and no telemetry. The web app makes no outbound network requests; desktop update checks are opt-in. The app binds to `127.0.0.1` only and stores everything in SQLite.
@@ -57,7 +59,7 @@ Spendly does one job well: making a monthly budget easy to live with. Everything
 
 Ten themes ship with Spendly, and each one is a complete visual system rather than a color swap. Every screenshot below was captured from the running app.
 
-Use the theme picker in the header, or open **Theme gallery** (the palette icon) to search, filter, and preview each theme. The choice is remembered per browser and survives desktop restarts. Click any screenshot to open it full size.
+Use the theme picker in the header, or open **Theme gallery** (the palette icon) to search, filter, and preview each theme. The choice is remembered per browser and survives desktop restarts. Choose **System** to follow your operating system's light or dark preference, which maps to Light SaaS and Dark Fintech. Click any screenshot to open it full size.
 
 | Theme | Desktop | Mobile |
 | :--- | :---: | :---: |
