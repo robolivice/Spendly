@@ -5,6 +5,22 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1]
+
+Fixes in-app updates failing to launch their installer or restart the app.
+
+### Fixed
+
+- **In-app updates on Windows.** The update helper now starts with the correct
+  process flags, so Spendly closes, installs the downloaded update, and reopens
+  automatically instead of stopping silently after the download.
+
+### Notes
+
+- Spendly 1.1.0 and 1.2.0 cannot install this release from the in-app updater
+  because the updater itself is affected. Install `Spendly-1.2.1-Setup.exe`
+  manually once; later updates work normally.
+
 ## [1.2.0]
 
 A dedicated settings page, currency-aware amounts, expense editing, undo, and search.
@@ -145,6 +161,7 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
+[1.2.1]: https://github.com/robolivice/spendly/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/robolivice/spendly/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/robolivice/spendly/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/robolivice/spendly/releases/tag/v1.0.0

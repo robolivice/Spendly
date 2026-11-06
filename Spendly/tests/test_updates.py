@@ -1,5 +1,6 @@
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -125,6 +126,43 @@ class FetchTests(unittest.TestCase):
 
     def test_ps_quote(self):
         self.assertEqual(updates._ps_quote("C:\\it's here"), "'C:\\it''s here'")
+
+
+@unittest.skipUnless(sys.platform == "win32", "Windows only")
+class InstallTests(unittest.TestCase):
+    def test_helper_spawn_uses_hidden_process_without_detaching(self):
+        manager = updates.UpdateManager()
+        target = Path(tempfile.gettempdir()) / "spendly-test-update.exe"
+        target.write_bytes(b"update")
+        release = {
+            "version": "1.2.1",
+            "assets": [
+                {
+                    "name": "Spendly-1.2.1-Update.exe",
+                    "digest": "sha256:" + "d" * 64,
+                }
+            ],
+        }
+        manager._download = {
+            "state": "ready",
+            "asset_name": "Spendly-1.2.1-Update.exe",
+            "target": str(target),
+        }
+        try:
+            with patch.object(updates, "sha256_file", return_value="d" * 64), patch.object(
+                updates.paths, "is_frozen", return_value=True
+            ), patch.object(updates.sys, "platform", "win32"), patch.object(
+                manager, "_state", return_value={"cached_release": release}
+            ), patch.object(updates.subprocess, "Popen") as popen:
+                ok, _message = manager.install()
+        finally:
+            target.unlink(missing_ok=True)
+        self.assertTrue(ok)
+        flags = popen.call_args.kwargs["creationflags"]
+        self.assertTrue(flags & updates.subprocess.CREATE_NO_WINDOW)
+        self.assertFalse(
+            flags & getattr(updates.subprocess, "DETACHED_PROCESS", 0)
+        )
 
 
 if __name__ == "__main__":

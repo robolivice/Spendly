@@ -843,9 +843,7 @@ class UpdateManager:
             return self._install_failure(
                 f"Could not prepare the update helper: {exc}"
             )
-        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0) | getattr(
-            subprocess, "DETACHED_PROCESS", 0
-        )
+        creationflags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         try:
             subprocess.Popen(
                 [
