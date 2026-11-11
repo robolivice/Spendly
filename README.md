@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/stars/robolivice/spendly?style=flat-square&logo=github&label=Stars&color=7c9cff" alt="GitHub stars">
   </a>
   <a href="https://github.com/robolivice/spendly/releases">
-    <img src="https://img.shields.io/badge/Version-1.3.0-7c9cff?style=flat-square" alt="Spendly 1.3.0">
+    <img src="https://img.shields.io/badge/Version-1.3.1-7c9cff?style=flat-square" alt="Spendly 1.3.1">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-3da639?style=flat-square" alt="MIT License">

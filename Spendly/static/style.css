@@ -1410,6 +1410,7 @@ select option {
     font-size: clamp(2.4rem, 5vw, 3.4rem);
     font-weight: 790;
     letter-spacing: -0.055em;
+    padding-right: 0.08em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
 }

@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 APP_NAME = "Spendly"
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.3.1"
 WINDOW_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 
