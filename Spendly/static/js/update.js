@@ -43,6 +43,7 @@
         bannerDismissed: false,
         errorShown: false,
         busy: false,
+        lastNotes: null,
     };
 
     const bridge = () => (window.pywebview && window.pywebview.api) || null;
@@ -174,8 +175,17 @@
         elements.stateText.classList.toggle("error", failed);
         setText(elements.stateText, message);
 
-        const notes = hasUpdate ? (update.notes || "").trim() : "";
-        setText(elements.notes, notes);
+        const notesHtml = hasUpdate ? (update.notes_html || "").trim() : "";
+        const notesText = hasUpdate ? (update.notes || "").trim() : "";
+        const notes = notesHtml || notesText;
+        if (elements.notes && notes !== state.lastNotes) {
+            if (notesHtml) {
+                elements.notes.innerHTML = notesHtml;
+            } else {
+                setText(elements.notes, notesText);
+            }
+            state.lastNotes = notes;
+        }
         setVisible(elements.notes, Boolean(notes));
 
         setVisible(elements.autoWrap, supported);
@@ -530,6 +540,23 @@
             } catch (error) {
             }
             await refresh();
+        });
+    }
+
+    if (elements.notes) {
+        elements.notes.addEventListener("click", async (event) => {
+            const target = event.target instanceof Element
+                ? event.target.closest("a[href]")
+                : null;
+            if (!target || !elements.notes.contains(target)) return;
+            event.preventDefault();
+            if (!state.bridge) return;
+            const url = target.getAttribute("href") || "";
+            if (!/^https?:\/\//i.test(url)) return;
+            try {
+                await state.bridge.open_release_page(url);
+            } catch (error) {
+            }
         });
     }
 

@@ -5,6 +5,24 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2]
+
+Fixes release notes appearing as raw Markdown in the update dialog and makes the
+installer much smaller.
+
+### Changed
+
+- **Smaller installer.** The setup now bundles the WebView2 Evergreen Bootstrapper
+  instead of the 215 MB standalone runtime, reducing the download from about
+  221 MB to about 19 MB. The runtime is downloaded during setup only when it is
+  missing.
+
+### Fixed
+
+- **Release notes formatting.** Update descriptions now render headings, lists,
+  emphasis, links, code, and tables like GitHub. Links open in the default
+  browser instead of replacing the app.
+
 ## [1.3.1]
 
 Fixes the dashboard total being clipped in gradient themes.
@@ -205,6 +223,7 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
+[1.3.2]: https://github.com/robolivice/spendly/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/robolivice/spendly/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/robolivice/spendly/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/robolivice/spendly/compare/v1.2.0...v1.2.1

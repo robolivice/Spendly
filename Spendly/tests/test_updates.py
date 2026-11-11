@@ -128,6 +128,82 @@ class FetchTests(unittest.TestCase):
         self.assertEqual(updates._ps_quote("C:\\it's here"), "'C:\\it''s here'")
 
 
+class RenderNotesTests(unittest.TestCase):
+    def test_renders_headings_lists_and_emphasis(self):
+        html = updates.render_notes(
+            "### Fixed\n\n- **Bold** item\n- Plain item"
+        )
+        self.assertIn("<h3>Fixed</h3>", html)
+        self.assertIn("<strong>Bold</strong>", html)
+        self.assertIn("<ul>", html)
+
+    def test_renders_tables_and_strikethrough(self):
+        html = updates.render_notes(
+            "| A | B |\n| --- | --- |\n| 1 | 2 |\n\n~~old~~"
+        )
+        self.assertIn("<table>", html)
+        self.assertIn("<s>old</s>", html)
+
+    def test_escapes_raw_html(self):
+        html = updates.render_notes("<script>alert('x')</script>")
+        self.assertNotIn("<script>", html)
+        self.assertIn("&lt;script&gt;", html)
+
+    def test_blocks_unsafe_links(self):
+        html = updates.render_notes("[x](javascript:alert(1))")
+        self.assertNotIn("<a", html)
+        self.assertNotIn("href=", html)
+
+    def test_renders_safe_links(self):
+        html = updates.render_notes("[docs](https://example.com/notes)")
+        self.assertIn('href="https://example.com/notes"', html)
+
+    def test_empty_notes(self):
+        self.assertEqual(updates.render_notes(""), "")
+        self.assertEqual(updates.render_notes("   \n"), "")
+        self.assertEqual(updates.render_notes(None), "")
+
+    def test_status_includes_rendered_notes(self):
+        manager = updates.UpdateManager()
+        release = {
+            "version": "9.9.9",
+            "tag": "v9.9.9",
+            "name": "Spendly 9.9.9",
+            "notes": "### Fixed\n\n- **Dialog** formatting",
+            "published_at": "2026-11-11T00:00:00Z",
+            "release_url": "https://example.com/release",
+            "assets": [],
+        }
+        with patch.object(manager, "_state", return_value={"cached_release": release}):
+            status = manager.status()
+        self.assertIn("<h3>Fixed</h3>", status["update"]["notes_html"])
+        self.assertIn("<strong>Dialog</strong>", status["update"]["notes_html"])
+
+
+class ReleaseUrlTests(unittest.TestCase):
+    def test_accepts_http_and_https(self):
+        manager = updates.UpdateManager()
+        self.assertEqual(
+            manager.release_url("https://example.com/notes"),
+            "https://example.com/notes",
+        )
+        self.assertEqual(
+            manager.release_url("http://example.com/notes"),
+            "http://example.com/notes",
+        )
+
+    def test_rejects_unsafe_urls(self):
+        manager = updates.UpdateManager()
+        self.assertEqual(
+            manager.release_url("javascript:alert(1)"), updates.RELEASES_URL
+        )
+        self.assertEqual(
+            manager.release_url("file:///C:/Windows/System32/calc.exe"),
+            updates.RELEASES_URL,
+        )
+        self.assertEqual(manager.release_url(None), updates.RELEASES_URL)
+
+
 @unittest.skipUnless(sys.platform == "win32", "Windows only")
 class InstallTests(unittest.TestCase):
     def test_helper_spawn_uses_hidden_process_without_detaching(self):

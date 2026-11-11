@@ -19,8 +19,8 @@ $IssFile = Join-Path $BuildDir "installer.iss"
 $AppIcon = Join-Path $BuildDir "icon.ico"
 $VersionTemplate = Join-Path $BuildDir "version_info.template.txt"
 $VersionInfo = Join-Path $BuildDir "version_info.generated.txt"
-$WebView2Installer = Join-Path $BuildDir "MicrosoftEdgeWebView2RuntimeInstallerX64.exe"
-$WebView2Url = "https://go.microsoft.com/fwlink/?linkid=2124701"
+$WebView2Bootstrapper = Join-Path $BuildDir "MicrosoftEdgeWebview2Setup.exe"
+$WebView2BootstrapperUrl = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
 $Utf8NoBom = New-Object System.Text.UTF8Encoding -ArgumentList $false
 
 $VersionSource = [IO.File]::ReadAllText($PathsFile)
@@ -127,12 +127,12 @@ if (-not $SkipInstaller) {
     }
 
     if ($Iscc) {
-        if (-not (Test-Path $WebView2Installer)) {
-            Write-Step "Downloading WebView2 offline runtime"
+        if (-not (Test-Path $WebView2Bootstrapper)) {
+            Write-Step "Downloading WebView2 bootstrapper"
             try {
-                Invoke-WebRequest -Uri $WebView2Url -OutFile $WebView2Installer -UseBasicParsing
+                Invoke-WebRequest -Uri $WebView2BootstrapperUrl -OutFile $WebView2Bootstrapper -UseBasicParsing
             } catch {
-                throw "Could not download the WebView2 offline runtime: $($_.Exception.Message)"
+                throw "Could not download the WebView2 bootstrapper: $($_.Exception.Message)"
             }
         }
 

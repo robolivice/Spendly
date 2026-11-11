@@ -8,6 +8,7 @@ dist/
 build/pyinstaller/
 build/portable/
 build/version_info.generated.txt
+build/MicrosoftEdgeWebview2Setup.exe
 build/MicrosoftEdgeWebView2RuntimeInstallerX64.exe
 Spendly/assets/icon-preview.png
 DESKTOP.md

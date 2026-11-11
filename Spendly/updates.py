@@ -13,7 +13,10 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+from markdown_it import MarkdownIt
 
 import paths
 import settings
@@ -24,6 +27,16 @@ CHECK_INTERVAL = timedelta(hours=24)
 SNOOZE_INTERVAL = timedelta(days=7)
 CACHE_AGE = timedelta(days=30)
 USER_AGENT = f"Spendly/{paths.APP_VERSION}"
+NOTES_RENDERER = MarkdownIt(
+    "commonmark",
+    {"html": False, "linkify": False, "typographer": False},
+).enable(["table", "strikethrough"])
+
+
+def render_notes(value):
+    if not isinstance(value, str) or not value.strip():
+        return ""
+    return NOTES_RENDERER.render(value)
 
 
 class UpdateError(Exception):
@@ -513,11 +526,13 @@ class UpdateManager:
                 cached.get("version"),
                 paths.is_portable(),
             )
+            notes = (cached.get("notes") or "")[:8000]
             update = {
                 "version": cached.get("version"),
                 "tag": cached.get("tag") or "",
                 "name": cached.get("name") or "",
-                "notes": (cached.get("notes") or "")[:8000],
+                "notes": notes,
+                "notes_html": render_notes(notes),
                 "published_at": cached.get("published_at") or "",
                 "release_url": cached.get("release_url") or RELEASES_URL,
                 "asset_name": asset.get("name") if asset else None,
@@ -879,10 +894,10 @@ class UpdateManager:
         return self.status()
 
     def release_url(self, value=None):
-        if isinstance(value, str) and value.startswith(
-            "https://github.com/robolivice/spendly/"
-        ):
-            return value
+        if isinstance(value, str):
+            parsed = urlparse(value)
+            if parsed.scheme in ("http", "https") and parsed.netloc:
+                return value
         return RELEASES_URL
 
 

@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/stars/robolivice/spendly?style=flat-square&logo=github&label=Stars&color=7c9cff" alt="GitHub stars">
   </a>
   <a href="https://github.com/robolivice/spendly/releases">
-    <img src="https://img.shields.io/badge/Version-1.3.1-7c9cff?style=flat-square" alt="Spendly 1.3.1">
+    <img src="https://img.shields.io/badge/Version-1.3.2-7c9cff?style=flat-square" alt="Spendly 1.3.2">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-3da639?style=flat-square" alt="MIT License">
@@ -53,7 +53,7 @@ Spendly does one job well: making a monthly budget easy to live with. Everything
 - **History worth reviewing.** Browse saved periods by year, compare spending against limits, and see which months finished on track, near the limit, or over budget.
 - **Ten complete themes.** Switch between light and dark interfaces with distinct layouts, typography, and component styling. Every theme is responsive and available from the built-in gallery.
 - **Local-first and private.** No account, no cloud, and no telemetry. The web app makes no outbound network requests; desktop update checks are opt-in. The app binds to `127.0.0.1` only and stores everything in SQLite.
-- **Desktop-ready.** The Windows build adds single-instance behavior, remembered window geometry, CSV export, validated database imports, safety backups, and a fully offline installer.
+- **Desktop-ready.** The Windows build adds single-instance behavior, remembered window geometry, CSV export, validated database imports, safety backups, and a compact installer.
 
 ## Themes
 
@@ -119,7 +119,7 @@ Prebuilt 64-bit Windows releases are available on the [Releases page](https://gi
 
 | Build | Description |
 | :--- | :--- |
-| **Installer** (`Spendly-<version>-Setup.exe`) | Recommended for most people on 64-bit Windows 10 or 11. Per-user install to `%LOCALAPPDATA%\Programs\Spendly`, a Start Menu shortcut, and an optional desktop shortcut. The installer is fully offline and bundles the WebView2 runtime installer, so it is about 221 MB. |
+| **Installer** (`Spendly-<version>-Setup.exe`) | Recommended for most people on 64-bit Windows 10 or 11. Per-user install to `%LOCALAPPDATA%\Programs\Spendly`, a Start Menu shortcut, and an optional desktop shortcut. The installer bundles the small WebView2 bootstrapper and downloads the runtime only when it is missing, so it is about 19 MB. |
 | **Portable** (`Spendly-<version>-portable.zip`) | Extract and run `Spendly.exe`. The database, backups, settings, and logs stay in `data\` beside the executable. About 17 MB. |
 
 The desktop build wraps the same Flask app in a native pywebview window and adds:
@@ -158,13 +158,13 @@ The packaging pipeline targets Windows. Build the executable, portable zip, and 
 powershell -ExecutionPolicy Bypass -File build/build.ps1
 ```
 
-The build script installs development dependencies, packages the app with PyInstaller, creates the portable archive, and compiles both Inno Setup installers when Inno Setup 6 is installed. It also downloads the WebView2 Evergreen Standalone Installer when needed.
+The build script installs development dependencies, packages the app with PyInstaller, creates the portable archive, and compiles both Inno Setup installers when Inno Setup 6 is installed. It also downloads the WebView2 Evergreen Bootstrapper when needed.
 
 | Output | Contents |
 | :--- | :--- |
 | `dist/Spendly/Spendly.exe` | One-folder application build |
 | `dist/Spendly-<version>-portable.zip` | Portable build with data stored beside the executable |
-| `dist/Spendly-<version>-Setup.exe` | Offline Windows installer with the WebView2 runtime |
+| `dist/Spendly-<version>-Setup.exe` | Windows installer with the WebView2 bootstrapper |
 | `dist/Spendly-<version>-Update.exe` | Lite installer used by in-app updates |
 
 Individual steps can be skipped with `-SkipVenv`, `-SkipIcon`, or `-SkipInstaller`.
