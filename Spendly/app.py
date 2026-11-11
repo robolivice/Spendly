@@ -9,6 +9,8 @@ import cycles
 import db
 import insights
 import paths
+import recurrence
+import recurring
 import settings
 import theme_catalog
 
@@ -27,6 +29,20 @@ app.config.update(
 DESKTOP_MODE = bool(os.environ.get("SPENDLY_DESKTOP"))
 
 db.setup()
+
+
+@app.before_request
+def process_recurring():
+    if request.method != "GET":
+        return None
+    if request.endpoint not in ("dashboard", "period_settings", "history", "search"):
+        return None
+    pid = session.get("pid")
+    if pid is None or db.getCycle(pid) is None:
+        return None
+    recurring.auto_post(pid, date.today())
+    return None
+
 
 CATEGORY_COLORS = {
     "cat-food": "var(--cat-food)",
@@ -95,6 +111,96 @@ def choose_category(pid, raw):
     if "Other" in names:
         return "Other"
     return names[0] if names else "Other"
+
+
+def recurring_form_values(pid):
+    try:
+        amount = float(request.form.get("amount", ""))
+    except ValueError:
+        return None, "Enter a valid amount."
+    if amount < 0:
+        return None, "The amount cannot be negative."
+    category = choose_category(pid, request.form.get("category", "Other"))
+    description = request.form.get("description", "").strip()[:200]
+    cadence = request.form.get("cadence", "monthly")
+    if cadence not in recurrence.CADENCES:
+        return None, "Choose a valid cadence."
+    try:
+        start = date.fromisoformat(request.form.get("start", "").strip())
+    except ValueError:
+        return None, "Choose a valid start date."
+    end = None
+    end_raw = request.form.get("end", "").strip()
+    if end_raw:
+        try:
+            end = date.fromisoformat(end_raw)
+        except ValueError:
+            return None, "Choose a valid end date."
+    next_raw = request.form.get("next_due", "").strip()
+    if next_raw:
+        try:
+            next_due = date.fromisoformat(next_raw)
+        except ValueError:
+            return None, "Choose a valid next due date."
+    else:
+        next_due = start
+    if end is not None and end < start:
+        return None, "The end date must be on or after the start date."
+    if next_due < start:
+        return None, "The next due date must be on or after the start date."
+    if end is not None and next_due > end:
+        return None, "The next due date must be on or before the end date."
+    return {
+        "amount": round(amount, 2),
+        "category": category,
+        "description": description,
+        "cadence": cadence,
+        "start": start.isoformat(),
+        "end": end.isoformat() if end else None,
+        "next_due": next_due.isoformat(),
+        "auto_post": request.form.get("auto_post") == "on",
+    }, None
+
+
+def template_form_values(pid):
+    name = " ".join(request.form.get("name", "").split())[:60]
+    if not name:
+        return None, "Enter a template name."
+    try:
+        amount = float(request.form.get("amount", ""))
+    except ValueError:
+        return None, "Enter a valid amount."
+    if amount < 0:
+        return None, "The amount cannot be negative."
+    category = choose_category(pid, request.form.get("category", "Other"))
+    description = request.form.get("description", "").strip()[:120]
+    return {
+        "name": name,
+        "category": category,
+        "amount": round(amount, 2),
+        "description": description,
+    }, None
+
+
+def occurrence_form_values(pid, due_raw):
+    try:
+        exp_date = date.fromisoformat(request.form.get("date", "").strip() or due_raw)
+    except ValueError:
+        return None, "Choose a valid date."
+    try:
+        amount = float(request.form.get("amount", ""))
+    except ValueError:
+        return None, "Enter a valid amount."
+    if amount < 0:
+        return None, "The amount cannot be negative."
+    category = choose_category(pid, request.form.get("category", "Other"))
+    description = request.form.get("description", "").strip()[:200]
+    return {
+        "date": exp_date,
+        "category": category,
+        "amount": round(amount, 2),
+        "description": description,
+    }, None
 
 
 def category_spending(pid, start, end):
@@ -439,13 +545,17 @@ def dashboard():
     expenses = db.getPeriodExpenses(pid, range_start, range_end, sort, direction)
     category_views = [category_view(row) for row in db.getCategories(pid)]
     insight = build_insights(pid, period, expenses, category_views, today)
+    recurring_due, recurring_scheduled, recurring_completed = recurring.upcoming(pid, today)
     return render_template(
         "dashboard.html", profile=profile, cycle=cycle, periods=views, period=period,
         older=older, newer=newer, expenses=expenses, sort=sort, direction=direction,
         range_start=range_start, range_end=range_end, today=today.isoformat(),
         save_state=save_state, save_limit=save_limit, save_target=save_target,
         save_label=save_label, overlap_names=overlap_names, future_default=future_default,
-        insight=insight,
+        insight=insight, recurring_due=recurring_due,
+        recurring_scheduled=recurring_scheduled,
+        recurring_completed=recurring_completed,
+        templates=db.getTemplates(pid),
     )
 
 
@@ -503,6 +613,9 @@ def period_settings():
             {"token": token, "label": label, "css_color": category_color(token)}
             for token, label in CATEGORY_COLOR_OPTIONS
         ],
+        recurring_rules=db.getRecurringRules(pid),
+        templates=db.getTemplates(pid),
+        today=today.isoformat(),
     )
 
 
@@ -583,12 +696,175 @@ def category_delete(category_id):
     if result == "ok":
         flash("Category deleted.", "ok")
     elif result == "used":
-        flash("That category still has expenses. Move or delete them first.", "error")
+        flash("That category still has expenses, recurring rules, or templates. Move or delete them first.", "error")
     elif result == "last":
         flash("Keep at least one category.", "error")
     else:
         flash("Category not found.", "error")
     return redirect(target)
+
+
+@app.route("/categories/<int:category_id>/move", methods=["POST"])
+def category_move(category_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    direction = request.args.get("direction", "")
+    db.moveCategory(pid, category_id, direction)
+    return redirect(safe_next(url_for("period_settings", _anchor="categories")))
+
+
+@app.route("/templates/add", methods=["POST"])
+def template_add():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings", _anchor="templates"))
+    values, error = template_form_values(pid)
+    if error:
+        flash(error, "error")
+        return redirect(target)
+    db.addTemplate(
+        pid,
+        values["name"],
+        values["category"],
+        values["amount"],
+        values["description"],
+    )
+    flash("Template added.", "ok")
+    return redirect(target)
+
+
+@app.route("/templates/<int:template_id>/use", methods=["POST"])
+def template_use(template_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    template = db.getTemplate(pid, template_id)
+    if template is None:
+        flash("Template not found.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    today = date.today()
+    db.save(
+        pid,
+        today.isoformat(),
+        template["category"],
+        template["amount"],
+        template["description"] or template["name"],
+    )
+    db.ensurePeriods(pid, today)
+    flash(f'Added "{template["name"]}" for today.', "ok")
+    return redirect(safe_next(url_for("dashboard")))
+
+
+@app.route("/templates/<int:template_id>/delete", methods=["POST"])
+def template_delete(template_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings", _anchor="templates"))
+    if db.deleteTemplate(pid, template_id):
+        flash("Template deleted.", "ok")
+    else:
+        flash("Template not found.", "error")
+    return redirect(target)
+
+
+@app.route("/recurring/add", methods=["POST"])
+def recurring_add():
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings", _anchor="recurring"))
+    values, error = recurring_form_values(pid)
+    if error:
+        flash(error, "error")
+        return redirect(target)
+    db.addRecurring(
+        pid,
+        values["amount"],
+        values["category"],
+        values["description"],
+        values["cadence"],
+        values["start"],
+        values["end"],
+        values["next_due"],
+        values["auto_post"],
+    )
+    flash("Recurring rule added.", "ok")
+    return redirect(target)
+
+
+@app.route("/recurring/<int:rule_id>/edit", methods=["POST"])
+def recurring_edit(rule_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings", _anchor=f"recurring-{rule_id}"))
+    if db.getRecurringRule(pid, rule_id) is None:
+        flash("Recurring rule not found.", "error")
+        return redirect(target)
+    values, error = recurring_form_values(pid)
+    if error:
+        flash(error, "error")
+        return redirect(target)
+    db.updateRecurring(
+        pid,
+        rule_id,
+        values["amount"],
+        values["category"],
+        values["description"],
+        values["cadence"],
+        values["start"],
+        values["end"],
+        values["next_due"],
+        values["auto_post"],
+    )
+    flash("Recurring rule saved.", "ok")
+    return redirect(target)
+
+
+@app.route("/recurring/<int:rule_id>/delete", methods=["POST"])
+def recurring_delete(rule_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    target = safe_next(url_for("period_settings", _anchor="recurring"))
+    if db.deleteRecurring(pid, rule_id) is None:
+        flash("Recurring rule not found.", "error")
+    else:
+        flash("Recurring rule deleted. Expenses already posted were kept.", "ok")
+    return redirect(target)
+
+
+@app.route("/recurring/<int:rule_id>/post", methods=["POST"])
+def recurring_post(rule_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    due = request.form.get("due", "").strip()
+    values = None
+    if "amount" in request.form:
+        values, error = occurrence_form_values(pid, due)
+        if error:
+            flash(error, "error")
+            return redirect(safe_next(url_for("dashboard")))
+    ok, message = recurring.post(pid, rule_id, due, date.today(), values)
+    if ok:
+        db.ensurePeriods(pid, date.today())
+    flash(message, "ok" if ok else "error")
+    return redirect(safe_next(url_for("dashboard")))
+
+
+@app.route("/recurring/<int:rule_id>/skip", methods=["POST"])
+def recurring_skip(rule_id):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    due = request.form.get("due", "").strip()
+    ok, message = recurring.skip(pid, rule_id, due, date.today())
+    flash(message, "ok" if ok else "error")
+    return redirect(safe_next(url_for("dashboard")))
 
 
 @app.route("/search")
@@ -909,6 +1185,34 @@ def edit_expense(eid):
     if target:
         return redirect(target)
     period = db.getPeriodContaining(pid, exp_date)
+    if period is not None:
+        return redirect(url_for("dashboard", period=period["id"]))
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/expense/<int:eid>/duplicate", methods=["POST"])
+def duplicate_expense(eid):
+    pid = session.get("pid")
+    if pid is None:
+        return redirect(url_for("index"))
+    expense = db.getExpense(pid, eid)
+    if expense is None:
+        flash("Expense not found.", "error")
+        return redirect(safe_next(url_for("dashboard")))
+    today = date.today()
+    db.save(
+        pid,
+        today.isoformat(),
+        expense["category"],
+        expense["amount"],
+        expense["description"],
+    )
+    db.ensurePeriods(pid, today)
+    flash("Expense duplicated for today.", "ok")
+    target = safe_next("")
+    if target:
+        return redirect(target)
+    period = db.getPeriodContaining(pid, today.isoformat())
     if period is not None:
         return redirect(url_for("dashboard", period=period["id"]))
     return redirect(url_for("dashboard"))

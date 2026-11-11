@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/stars/robolivice/spendly?style=flat-square&logo=github&label=Stars&color=7c9cff" alt="GitHub stars">
   </a>
   <a href="https://github.com/robolivice/spendly/releases">
-    <img src="https://img.shields.io/badge/Version-1.3.2-7c9cff?style=flat-square" alt="Spendly 1.3.2">
+    <img src="https://img.shields.io/badge/Version-1.4.0-7c9cff?style=flat-square" alt="Spendly 1.4.0">
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-3da639?style=flat-square" alt="MIT License">
@@ -44,12 +44,15 @@ Spendly does one job well: making a monthly budget easy to live with. Everything
 - **Multiple profiles** for separate budgets, accounts, or people. Create, rename, switch, and delete profiles without mixing their data.
 - **Flexible budget cycles.** Start with any date range, then let Spendly generate future periods from the cycle end day. Month-end dates are handled correctly, including February.
 - **Limits that make sense.** Set an optional limit per period, inherit the latest limit into new periods, and see spent, remaining, and pacing status at a glance.
-- **Focused expense entry.** Record a date, category, amount, and optional description. Sort the transaction table by date, category, amount, or description, edit any entry in place, and undo deletions from a toast.
+- **Focused expense entry.** Record a date, category, amount, and optional description. Sort the transaction table by date, category, amount, or description, edit any entry in place, duplicate an expense with today's date, and undo deletions from a toast.
+- **Recurring expenses.** Save weekly, monthly, or yearly bills with an optional end date. Due bills wait in an Upcoming card where you can post, skip, or edit an occurrence, or change the whole series.
+- **Review first, automate when ready.** Recurring bills require review by default. Enable auto-post per rule when you want Spendly to record each due date without prompting, with duplicate protection built in.
+- **Reusable templates.** Save repeat entries in Settings and add them to today's expenses with one click from the dashboard.
 - **Search that stays close.** Filter the current period as you type, or search descriptions, categories, dates, and amounts across the current period or all saved data.
 - **Spending insights.** See a category donut, compare cumulative spending with the ideal pace, and check safe-to-spend per day, daily burn rate, projected total, and days left in the period.
-- **Custom categories and budgets.** Add, rename, recolor, or remove categories from Settings, and set an optional budget for each one. Existing expenses are adopted into the category list automatically.
+- **Custom categories and budgets.** Add, rename, recolor, reorder, or remove categories from Settings, and set an optional budget for each one. Existing expenses are adopted into the category list automatically.
 - **Currency-aware totals.** Choose INR, USD, EUR, or GBP in Settings. Every amount, limit, history row, and search result uses the selected currency and locale formatting.
-- **Settings in one place.** Manage saved periods and cycle settings, organize categories and budgets, pick a currency, switch themes, and control desktop update checks from a single page.
+- **Settings in one place.** Manage saved periods and cycle settings, recurring rules, templates, categories and budgets, currency, themes, and desktop update checks from a single page.
 - **History worth reviewing.** Browse saved periods by year, compare spending against limits, and see which months finished on track, near the limit, or over budget.
 - **Ten complete themes.** Switch between light and dark interfaces with distinct layouts, typography, and component styling. Every theme is responsive and available from the built-in gallery.
 - **Local-first and private.** No account, no cloud, and no telemetry. The web app makes no outbound network requests; desktop update checks are opt-in. The app binds to `127.0.0.1` only and stores everything in SQLite.
@@ -95,7 +98,7 @@ On first run:
 
 1. Create a profile.
 2. Set the first period's start and end dates and an optional monthly limit.
-3. Add expenses from the dashboard and review saved periods in **History**.
+3. Add expenses from the dashboard. Set up recurring bills and templates in **Settings**, then review saved periods in **History**.
 
 To keep test data separate from your real data, point Spendly at another folder:
 
@@ -177,6 +180,8 @@ Spendly/
 |-- desktop.py           pywebview host, CSV export, database import
 |-- updates.py           GitHub release checks, downloads, and updates
 |-- db.py                SQLite schema and queries
+|-- recurrence.py        Recurring date math and cadence handling
+|-- recurring.py         Recurring rule posting, skipping, and auto-post
 |-- currency.py          Currency definitions and amount formatting
 |-- cycles.py            Budget period calculations
 |-- migration.py         First-run import, validation, backups
@@ -190,7 +195,7 @@ Spendly/
 |   |-- themes/          Per-theme stylesheets
 |   |-- img/themes/      Desktop and mobile theme screenshots
 |   `-- js/              Theme, gallery, dashboard, and update behavior
-|-- tests/               Updater unit tests
+|-- tests/               Feature, recurring, and updater tests
 `-- assets/              Application icon and logo
 build/                   PyInstaller, portable, and Inno Setup build files
 CHANGELOG.md             Release history

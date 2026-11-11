@@ -134,6 +134,52 @@
         });
     }
 
+    const recurringDialog = document.getElementById("recurring-dialog");
+    const recurringForm = document.getElementById("recurring-form");
+    if (recurringDialog && recurringForm) {
+        const recurringDue = document.getElementById("recurring-dialog-due");
+        const recurringDate = document.getElementById("recurring-dialog-date");
+        const recurringCategory = document.getElementById("recurring-dialog-category");
+        const recurringAmount = document.getElementById("recurring-dialog-amount");
+        const recurringDescription = document.getElementById("recurring-dialog-description");
+        const recurringNext = document.getElementById("recurring-dialog-next");
+        const recurringClose = document.getElementById("recurring-dialog-close");
+        const recurringCancel = document.getElementById("recurring-dialog-cancel");
+
+        const closeRecurring = () => {
+            if (recurringDialog.open) recurringDialog.close();
+        };
+
+        document.querySelectorAll("[data-post-recurring]").forEach(button => {
+            button.addEventListener("click", () => {
+                const params = new URLSearchParams(window.location.search);
+                params.delete("undo");
+                const query = params.toString();
+                recurringForm.action = button.dataset.action || "";
+                if (recurringNext) {
+                    recurringNext.value = `${window.location.pathname}${query ? `?${query}` : ""}`;
+                }
+                if (recurringDue) recurringDue.value = button.dataset.due || "";
+                if (recurringDate) recurringDate.value = button.dataset.date || "";
+                if (recurringCategory) recurringCategory.value = button.dataset.category || "Other";
+                if (recurringAmount) recurringAmount.value = button.dataset.amount || "";
+                if (recurringDescription) recurringDescription.value = button.dataset.description || "";
+                if (typeof recurringDialog.showModal === "function") recurringDialog.showModal();
+                if (recurringAmount) recurringAmount.focus();
+                if (recurringAmount) recurringAmount.select();
+            });
+        });
+
+        if (recurringClose) recurringClose.addEventListener("click", closeRecurring);
+        if (recurringCancel) recurringCancel.addEventListener("click", closeRecurring);
+        recurringDialog.addEventListener("click", event => {
+            if (event.target === recurringDialog) closeRecurring();
+        });
+        recurringForm.addEventListener("submit", () => {
+            if (recurringDescription) recurringDescription.value = recurringDescription.value.trim();
+        });
+    }
+
     const toast = document.querySelector(".toast-undo");
     if (toast) {
         const dismiss = () => {

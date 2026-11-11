@@ -1,5 +1,6 @@
 import calendar
 import json
+import logging
 import sqlite3
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -8,6 +9,9 @@ import cycles
 import paths
 
 DB = str(paths.db_path())
+SCHEMA_VERSION = 2
+
+log = logging.getLogger("spendly.db")
 
 CATEGORY_COLOR_TOKENS = (
     "cat-food",
@@ -101,10 +105,40 @@ def connect():
     return conn
 
 
-def setup():
-    conn = connect()
-    conn.execute("PRAGMA journal_mode = WAL")
-    conn.execute("PRAGMA synchronous = NORMAL")
+def _has_tables(conn):
+    row = conn.execute("""
+    SELECT COUNT(*) FROM sqlite_master
+    WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+    """).fetchone()
+    return bool(row[0])
+
+
+def _record_migration(message):
+    log.info(message)
+    try:
+        with (paths.data_dir() / "migration.log").open("a", encoding="utf-8") as handle:
+            stamp = datetime.now().isoformat(timespec="seconds")
+            handle.write(f"{stamp} {message}\n")
+    except OSError:
+        log.exception("Could not write migration log")
+
+
+def _backup_before_migration(conn, version):
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    destination = paths.backup_dir() / f"pre-migration-v{version}-{stamp}.db"
+    target = sqlite3.connect(str(destination))
+    try:
+        conn.backup(target)
+        target.commit()
+    finally:
+        target.close()
+    _record_migration(
+        f"Backed up database before schema migration to version {SCHEMA_VERSION}: {destination}"
+    )
+    return destination
+
+
+def _create_core_schema(conn):
     conn.execute("""
     CREATE TABLE IF NOT EXISTS profiles(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -171,6 +205,69 @@ def setup():
     conn.execute("CREATE INDEX IF NOT EXISTS idx_periods_profile_end ON periods(profile_id, end_date)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_actions_profile_undone ON actions(profile_id, undone)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_categories_profile ON categories(profile_id, position)")
+
+
+def _create_recurring_schema(conn):
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS recurring(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        category TEXT NOT NULL,
+        description TEXT,
+        cadence TEXT NOT NULL CHECK(cadence IN ('weekly', 'monthly', 'yearly')),
+        start_date TEXT NOT NULL,
+        end_date TEXT,
+        next_due TEXT NOT NULL,
+        auto_post INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+    )""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS recurring_occurrences(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rule_id INTEGER NOT NULL,
+        due_date TEXT NOT NULL,
+        status TEXT NOT NULL CHECK(status IN ('posted', 'skipped')),
+        expense_id INTEGER,
+        handled_at TEXT NOT NULL,
+        UNIQUE(rule_id, due_date),
+        FOREIGN KEY (rule_id) REFERENCES recurring(id) ON DELETE CASCADE
+    )""")
+    conn.execute("""
+    CREATE TABLE IF NOT EXISTS templates(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        profile_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        amount REAL NOT NULL,
+        description TEXT,
+        FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE CASCADE
+    )""")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_recurring_profile_due ON recurring(profile_id, next_due)")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_templates_profile ON templates(profile_id, name)")
+
+
+def _migrate_schema(conn, version):
+    if version < 2:
+        _create_recurring_schema(conn)
+
+
+def setup():
+    conn = connect()
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
+    has_tables = _has_tables(conn)
+    version = conn.execute("PRAGMA user_version").fetchone()[0]
+    if has_tables and version < SCHEMA_VERSION:
+        _backup_before_migration(conn, max(version, 1))
+    _create_core_schema(conn)
+    if version < SCHEMA_VERSION:
+        _migrate_schema(conn, version)
+        conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+        if has_tables:
+            _record_migration(
+                f"Upgraded database schema from version {max(version, 1)} to {SCHEMA_VERSION}"
+            )
     conn.execute("""
     INSERT OR IGNORE INTO periods(profile_id, start_date, end_date, limit_amount)
     SELECT profile_id, start_date, end_date, amount FROM limits
@@ -239,6 +336,12 @@ def deleteProfile(pid):
     conn.execute("DELETE FROM limits WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM periods WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM cycles WHERE profile_id = ?", (pid,))
+    conn.execute("""
+    DELETE FROM recurring_occurrences
+    WHERE rule_id IN (SELECT id FROM recurring WHERE profile_id = ?)
+    """, (pid,))
+    conn.execute("DELETE FROM recurring WHERE profile_id = ?", (pid,))
+    conn.execute("DELETE FROM templates WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM categories WHERE profile_id = ?", (pid,))
     conn.execute("DELETE FROM profiles WHERE id = ?", (pid,))
     conn.commit()
@@ -305,6 +408,14 @@ def updateCategory(pid, category_id, name, color, budget):
             UPDATE expenses SET category = ?
             WHERE profile_id = ? AND category = ? COLLATE NOCASE
             """, (name, pid, previous))
+            conn.execute("""
+            UPDATE recurring SET category = ?
+            WHERE profile_id = ? AND category = ? COLLATE NOCASE
+            """, (name, pid, previous))
+            conn.execute("""
+            UPDATE templates SET category = ?
+            WHERE profile_id = ? AND category = ? COLLATE NOCASE
+            """, (name, pid, previous))
         conn.commit()
         updated = True
     except sqlite3.IntegrityError:
@@ -331,6 +442,14 @@ def deleteCategory(pid, category_id):
     used = conn.execute("""
     SELECT 1 FROM expenses WHERE profile_id = ? AND category = ? COLLATE NOCASE LIMIT 1
     """, (pid, row["name"])).fetchone()
+    if used is None:
+        used = conn.execute("""
+        SELECT 1 FROM recurring WHERE profile_id = ? AND category = ? COLLATE NOCASE LIMIT 1
+        """, (pid, row["name"])).fetchone()
+    if used is None:
+        used = conn.execute("""
+        SELECT 1 FROM templates WHERE profile_id = ? AND category = ? COLLATE NOCASE LIMIT 1
+        """, (pid, row["name"])).fetchone()
     if used:
         conn.close()
         return "used"
@@ -350,6 +469,179 @@ def setCategoryBudget(pid, category_id, amount):
     )
     conn.commit()
     conn.close()
+
+
+def moveCategory(pid, category_id, direction):
+    if direction not in ("up", "down"):
+        return False
+    conn = connect()
+    rows = conn.execute("""
+    SELECT id FROM categories
+    WHERE profile_id = ? ORDER BY position, name COLLATE NOCASE, id
+    """, (pid,)).fetchall()
+    ids = [row["id"] for row in rows]
+    if category_id not in ids:
+        conn.close()
+        return False
+    index = ids.index(category_id)
+    target = index - 1 if direction == "up" else index + 1
+    if target < 0 or target >= len(ids):
+        conn.close()
+        return False
+    ids[index], ids[target] = ids[target], ids[index]
+    for position, item_id in enumerate(ids):
+        conn.execute(
+            "UPDATE categories SET position = ? WHERE id = ? AND profile_id = ?",
+            (position, item_id, pid),
+        )
+    conn.commit()
+    conn.close()
+    return True
+
+
+def getTemplates(pid):
+    conn = connect()
+    rows = conn.execute("""
+    SELECT id, name, category, amount, description FROM templates
+    WHERE profile_id = ? ORDER BY name COLLATE NOCASE, id
+    """, (pid,)).fetchall()
+    conn.close()
+    return rows
+
+
+def getTemplate(pid, template_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, name, category, amount, description FROM templates
+    WHERE id = ? AND profile_id = ?
+    """, (template_id, pid)).fetchone()
+    conn.close()
+    return row
+
+
+def addTemplate(pid, name, category, amount, description):
+    conn = connect()
+    cur = conn.execute("""
+    INSERT INTO templates(profile_id, name, category, amount, description)
+    VALUES (?, ?, ?, ?, ?)
+    """, (pid, name, category, amount, description))
+    template_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return template_id
+
+
+def deleteTemplate(pid, template_id):
+    conn = connect()
+    cur = conn.execute(
+        "DELETE FROM templates WHERE id = ? AND profile_id = ?",
+        (template_id, pid),
+    )
+    conn.commit()
+    deleted = cur.rowcount > 0
+    conn.close()
+    return deleted
+
+
+def getRecurringRules(pid):
+    conn = connect()
+    rows = conn.execute("""
+    SELECT id, amount, category, description, cadence, start_date, end_date,
+           next_due, auto_post
+    FROM recurring
+    WHERE profile_id = ? ORDER BY next_due, id
+    """, (pid,)).fetchall()
+    conn.close()
+    return rows
+
+
+def getRecurringRule(pid, rule_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, amount, category, description, cadence, start_date, end_date,
+           next_due, auto_post
+    FROM recurring
+    WHERE id = ? AND profile_id = ?
+    """, (rule_id, pid)).fetchone()
+    conn.close()
+    return row
+
+
+def addRecurring(pid, amount, category, description, cadence, start_date, end_date, next_due, auto_post):
+    conn = connect()
+    cur = conn.execute("""
+    INSERT INTO recurring(profile_id, amount, category, description, cadence,
+                          start_date, end_date, next_due, auto_post)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        pid,
+        amount,
+        category,
+        description,
+        cadence,
+        start_date,
+        end_date,
+        next_due,
+        1 if auto_post else 0,
+    ))
+    rule_id = cur.lastrowid
+    conn.commit()
+    conn.close()
+    return rule_id
+
+
+def updateRecurring(pid, rule_id, amount, category, description, cadence, start_date, end_date, next_due, auto_post):
+    conn = connect()
+    cur = conn.execute("""
+    UPDATE recurring
+    SET amount = ?, category = ?, description = ?, cadence = ?, start_date = ?,
+        end_date = ?, next_due = ?, auto_post = ?
+    WHERE id = ? AND profile_id = ?
+    """, (
+        amount,
+        category,
+        description,
+        cadence,
+        start_date,
+        end_date,
+        next_due,
+        1 if auto_post else 0,
+        rule_id,
+        pid,
+    ))
+    conn.commit()
+    updated = cur.rowcount > 0
+    conn.close()
+    return updated
+
+
+def deleteRecurring(pid, rule_id):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, amount, category, description, cadence, start_date, end_date,
+           next_due, auto_post
+    FROM recurring
+    WHERE id = ? AND profile_id = ?
+    """, (rule_id, pid)).fetchone()
+    if row is None:
+        conn.close()
+        return None
+    conn.execute("DELETE FROM recurring_occurrences WHERE rule_id = ?", (rule_id,))
+    conn.execute("DELETE FROM recurring WHERE id = ? AND profile_id = ?", (rule_id, pid))
+    conn.commit()
+    conn.close()
+    return row
+
+
+def getRecurringOccurrence(rule_id, due_date):
+    conn = connect()
+    row = conn.execute("""
+    SELECT id, rule_id, due_date, status, expense_id, handled_at
+    FROM recurring_occurrences
+    WHERE rule_id = ? AND due_date = ?
+    """, (rule_id, due_date)).fetchone()
+    conn.close()
+    return row
 
 
 def getCategorySpending(pid, start, end):

@@ -136,6 +136,96 @@
 {% endif %}
 
 <div class="dashboard-grid">
+    <article class="card upcoming-card span-12">
+        <div class="card-head">
+            <div>
+                <h2>Upcoming</h2>
+                <span class="muted">Recurring bills waiting for review.</span>
+            </div>
+            <div class="upcoming-head-actions">
+                {% if recurring_due %}<span class="badge badge-warn">{{ recurring_due|length }} due</span>{% endif %}
+                <a class="link" href="{{ url_for('period_settings', _anchor='recurring') }}">Manage rules</a>
+            </div>
+        </div>
+        {% if recurring_due %}
+        <ul class="upcoming-list">
+            {% for rule in recurring_due %}
+            <li class="upcoming-item">
+                <div class="upcoming-main">
+                    <span class="cat-dot" style="--cat: {{ category_colors.get(rule.category, 'var(--cat-other)') }}" aria-hidden="true"></span>
+                    <div class="upcoming-copy">
+                        <span class="upcoming-title">
+                            {{ rule.description or rule.category }}
+                            <span class="badge">{{ rule.cadence_label }}</span>
+                            {% if rule.auto_post %}<span class="badge badge-current">Auto</span>{% endif %}
+                        </span>
+                        <span class="upcoming-meta">
+                            {{ rule.category }} · <span class="upcoming-due{% if rule.overdue %} is-overdue{% endif %}">{{ rule.due_label }}</span> · {{ rule.due_display }}
+                            {% if rule.due_count > 1 %} · {{ rule.due_count }} cycles due{% endif %}
+                        </span>
+                    </div>
+                    <span class="upcoming-amount">{{ rule.amount|money }}</span>
+                </div>
+                <div class="upcoming-actions">
+                    <form action="{{ url_for('recurring_post', rule_id=rule.id) }}" method="post">
+                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                        <input type="hidden" name="due" value="{{ rule.due_date }}">
+                        <button class="btn btn-primary btn-sm" type="submit">Post</button>
+                    </form>
+                    <form action="{{ url_for('recurring_skip', rule_id=rule.id) }}" method="post">
+                        <input type="hidden" name="next" value="{{ request.full_path }}">
+                        <input type="hidden" name="due" value="{{ rule.due_date }}">
+                        <button class="btn btn-ghost btn-sm" type="submit">Skip</button>
+                    </form>
+                    <button type="button" class="btn btn-ghost btn-sm"
+                            data-post-recurring
+                            data-action="{{ url_for('recurring_post', rule_id=rule.id) }}"
+                            data-due="{{ rule.due_date }}"
+                            data-date="{{ rule.due_date }}"
+                            data-category="{{ rule.category }}"
+                            data-amount="{{ '%.2f'|format(rule.amount) }}"
+                            data-description="{{ rule.description or '' }}">Edit</button>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% elif recurring_scheduled %}
+        <div class="upcoming-empty">
+            <strong>No bills due right now</strong>
+            <p>Next up: {{ recurring_scheduled[0].description or recurring_scheduled[0].category }} on {{ recurring_scheduled[0].next_due_display }}.</p>
+        </div>
+        {% elif recurring_completed %}
+        <div class="upcoming-empty">
+            <strong>No upcoming bills</strong>
+            <p>All recurring rules have ended. Add another rule in Settings whenever you need one.</p>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true">↻</span>
+            <strong>No recurring expenses yet</strong>
+            <p>Add bills you pay every week, month, or year so they show up here when due.</p>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('period_settings', _anchor='recurring') }}">Set up recurring bills</a>
+        </div>
+        {% endif %}
+        {% if recurring_scheduled %}
+        <div class="upcoming-later">
+            <span class="stat-label">Later</span>
+            {% for rule in recurring_scheduled %}
+            <div class="upcoming-later-row">
+                <span class="cat-dot" style="--cat: {{ category_colors.get(rule.category, 'var(--cat-other)') }}" aria-hidden="true"></span>
+                <span class="upcoming-later-copy">
+                    {{ rule.description or rule.category }}
+                    <small>{{ rule.category }} · {{ rule.cadence_label }}</small>
+                </span>
+                <span class="upcoming-later-date">{{ rule.next_due_display }}</span>
+                <span class="upcoming-amount">{{ rule.amount|money }}</span>
+                <a class="link" href="{{ url_for('period_settings', _anchor='recurring-' ~ rule.id) }}">Edit series</a>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </article>
+
     <article class="card hero-card span-8{% if period.limit is none %} hero-card--nolimit{% endif %}">
         <div class="hero-main">
             <div class="hero-copy">
@@ -337,6 +427,20 @@
             <h2>Add expense</h2>
             <span class="muted">{{ today }}</span>
         </div>
+        {% if templates %}
+        <div class="template-strip">
+            <span class="template-strip-label">Templates</span>
+            {% for template in templates %}
+            <form action="{{ url_for('template_use', template_id=template['id']) }}" method="post" class="template-form">
+                <input type="hidden" name="next" value="{{ request.full_path }}">
+                <button class="template-chip" type="submit" title="Add {{ template['name'] }} for today">
+                    <span>{{ template['name'] }}</span>
+                    <span class="template-chip-amount">{{ template['amount']|money }}</span>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+        {% endif %}
         <form action="{{ url_for('add') }}" method="post" class="add-form">
             <input type="hidden" name="start" value="{{ range_start }}">
             <input type="hidden" name="end" value="{{ range_end }}">
@@ -358,6 +462,7 @@
             </label>
             <button class="btn btn-primary" type="submit">Add expense</button>
         </form>
+        <p class="small add-card-foot">Save repeat entries as <a class="link" href="{{ url_for('period_settings', _anchor='templates') }}">templates</a>.</p>
     </article>
 
     <article class="card transactions-card span-7">
@@ -403,6 +508,10 @@
                         <td>{{ e['description'] or '' }}</td>
                         <td class="actions-cell">
                             <div class="row-actions">
+                                <form action="{{ url_for('duplicate_expense', eid=e['id']) }}" method="post">
+                                    <input type="hidden" name="next" value="{{ request.full_path }}">
+                                    <button type="submit" class="btn btn-ghost btn-sm">Duplicate</button>
+                                </form>
                                 <button type="button" class="btn btn-ghost btn-sm edit-expense"
                                         data-edit-expense
                                         data-action="{{ url_for('edit_expense', eid=e['id']) }}"
@@ -432,6 +541,43 @@
         {% endif %}
     </article>
 </div>
+
+<dialog id="recurring-dialog" class="expense-dialog" aria-labelledby="recurring-dialog-title">
+    <form id="recurring-form" method="post" action="">
+        <input type="hidden" name="next" id="recurring-dialog-next" value="{{ request.full_path }}">
+        <input type="hidden" name="due" id="recurring-dialog-due">
+        <div class="expense-dialog-head">
+            <div>
+                <p class="eyebrow">Recurring</p>
+                <h2 id="recurring-dialog-title">Edit this occurrence</h2>
+            </div>
+            <button class="update-close" id="recurring-dialog-close" type="button" aria-label="Close">×</button>
+        </div>
+        <p class="small">Changes apply to this occurrence only. The rule and its next due date move forward after posting.</p>
+        <div class="expense-dialog-grid">
+            <label class="field">Date
+                <input type="date" name="date" id="recurring-dialog-date" class="date-picker" max="{{ today }}" readonly required>
+            </label>
+            <label class="field">Category
+                <select name="category" id="recurring-dialog-category">
+                    {% for category in categories %}
+                    <option value="{{ category['name'] }}">{{ category['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">Amount ({{ currency_info['symbol'] }})
+                <input type="number" step="0.01" min="0" name="amount" id="recurring-dialog-amount" inputmode="decimal" required>
+            </label>
+            <label class="field field-grow">Description
+                <input type="text" name="description" id="recurring-dialog-description" maxlength="120" placeholder="What was it for?">
+            </label>
+        </div>
+        <div class="dialog-actions">
+            <button class="btn btn-ghost" id="recurring-dialog-cancel" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Post occurrence</button>
+        </div>
+    </form>
+</dialog>
 {% endif %}
 {% endblock %}
 

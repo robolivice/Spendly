@@ -36,6 +36,161 @@
         <p class="small">Applies to every profile and saved period.</p>
     </article>
 
+    <article class="card settings-card span-2 recurring-settings-card" id="recurring">
+        <div class="card-head">
+            <div>
+                <h2>Recurring expenses</h2>
+                <span class="muted">Add bills you pay every week, month, or year. Review them on the dashboard before posting.</span>
+            </div>
+            <span class="badge">{{ recurring_rules|length }} {{ 'rule' if recurring_rules|length == 1 else 'rules' }}</span>
+        </div>
+        <form action="{{ url_for('recurring_add') }}" method="post" class="recurring-form">
+            <input type="hidden" name="next" value="{{ url_for('period_settings', _anchor='recurring') }}">
+            <label class="field field-grow">Description
+                <input type="text" name="description" maxlength="200" placeholder="Rent, internet, gym...">
+            </label>
+            <label class="field">Amount ({{ currency_info['symbol'] }})
+                <input type="number" name="amount" min="0" step="0.01" placeholder="0.00" required>
+            </label>
+            <label class="field">Category
+                <select name="category">
+                    {% for category in categories %}
+                    <option value="{{ category['name'] }}">{{ category['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">Cadence
+                <select name="cadence">
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly" selected>Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+            </label>
+            <label class="field">Starts
+                <input type="date" name="start" value="{{ today }}" class="date-picker" readonly required>
+            </label>
+            <label class="field">Ends (optional)
+                <input type="date" name="end" class="date-picker">
+            </label>
+            <label class="field">Next due
+                <input type="date" name="next_due" value="{{ today }}" class="date-picker" readonly required>
+            </label>
+            <label class="check">
+                <input type="checkbox" name="auto_post">
+                <span>Post automatically when due</span>
+            </label>
+            <button class="btn btn-primary" type="submit">Add recurring rule</button>
+        </form>
+        <p class="small">Review is the default. Automatic posting is opt-in per rule and records each due date only once.</p>
+        {% if recurring_rules %}
+        <div class="recurring-list">
+            {% for rule in recurring_rules %}
+            <form action="{{ url_for('recurring_edit', rule_id=rule['id']) }}" method="post" class="recurring-row" id="recurring-{{ rule['id'] }}">
+                <input type="hidden" name="next" value="{{ url_for('period_settings', _anchor='recurring-' ~ rule['id']) }}">
+                <div class="recurring-row-head">
+                    <span class="cat-dot" style="--cat: {{ category_colors.get(rule['category'], 'var(--cat-other)') }}" aria-hidden="true"></span>
+                    <strong>{{ rule['description'] or rule['category'] }}</strong>
+                    <span class="badge">{{ rule['cadence']|capitalize }}</span>
+                    {% if rule['auto_post'] %}<span class="badge badge-current">Auto</span>{% endif %}
+                </div>
+                <div class="recurring-row-grid">
+                    <label class="field field-grow">Description
+                        <input type="text" name="description" maxlength="200" value="{{ rule['description'] or '' }}">
+                    </label>
+                    <label class="field">Amount ({{ currency_info['symbol'] }})
+                        <input type="number" name="amount" min="0" step="0.01" value="{{ rule['amount'] }}" required>
+                    </label>
+                    <label class="field">Category
+                        <select name="category">
+                            {% for category in categories %}
+                            <option value="{{ category['name'] }}" {% if category['name'] == rule['category'] %}selected{% endif %}>{{ category['name'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label class="field">Cadence
+                        <select name="cadence">
+                            <option value="weekly" {% if rule['cadence'] == 'weekly' %}selected{% endif %}>Weekly</option>
+                            <option value="monthly" {% if rule['cadence'] == 'monthly' %}selected{% endif %}>Monthly</option>
+                            <option value="yearly" {% if rule['cadence'] == 'yearly' %}selected{% endif %}>Yearly</option>
+                        </select>
+                    </label>
+                    <label class="field">Starts
+                        <input type="date" name="start" value="{{ rule['start_date'] }}" class="date-picker" readonly required>
+                    </label>
+                    <label class="field">Ends (optional)
+                        <input type="date" name="end" value="{{ rule['end_date'] or '' }}" class="date-picker">
+                    </label>
+                    <label class="field">Next due
+                        <input type="date" name="next_due" value="{{ rule['next_due'] }}" class="date-picker" readonly required>
+                    </label>
+                </div>
+                <div class="recurring-row-actions">
+                    <label class="check">
+                        <input type="checkbox" name="auto_post" {% if rule['auto_post'] %}checked{% endif %}>
+                        <span>Post automatically when due</span>
+                    </label>
+                    <button class="btn btn-ghost btn-sm" type="submit">Save rule</button>
+                    <button class="btn btn-danger btn-sm" type="submit" formaction="{{ url_for('recurring_delete', rule_id=rule['id']) }}" data-confirm="Delete this recurring rule? Expenses already posted will be kept.">Delete</button>
+                </div>
+            </form>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="small recurring-empty">No recurring rules yet. Add your first bill above.</p>
+        {% endif %}
+        <p class="small">Saving a rule applies to future occurrences and keeps posted expenses unchanged. Deleting a rule keeps its posted expenses. Skipped dates are recorded and will not post later.</p>
+    </article>
+
+    <article class="card settings-card" id="templates">
+        <div class="card-head">
+            <div>
+                <h2>Expense templates</h2>
+                <span class="muted">Save repeat entries for one-click use on the dashboard.</span>
+            </div>
+            <span class="badge">{{ templates|length }} {{ 'template' if templates|length == 1 else 'templates' }}</span>
+        </div>
+        <form action="{{ url_for('template_add') }}" method="post" class="template-add-form">
+            <input type="hidden" name="next" value="{{ url_for('period_settings', _anchor='templates') }}">
+            <label class="field field-grow">Name
+                <input type="text" name="name" maxlength="60" placeholder="Morning coffee" required>
+            </label>
+            <label class="field">Category
+                <select name="category">
+                    {% for category in categories %}
+                    <option value="{{ category['name'] }}">{{ category['name'] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="field">Amount ({{ currency_info['symbol'] }})
+                <input type="number" name="amount" min="0" step="0.01" placeholder="0.00" required>
+            </label>
+            <label class="field field-grow">Description (optional)
+                <input type="text" name="description" maxlength="120" placeholder="What was it for?">
+            </label>
+            <button class="btn btn-primary" type="submit">Add template</button>
+        </form>
+        {% if templates %}
+        <div class="template-list">
+            {% for template in templates %}
+            <div class="template-item">
+                <span class="cat-dot" style="--cat: {{ category_colors.get(template['category'], 'var(--cat-other)') }}" aria-hidden="true"></span>
+                <span class="template-item-copy">
+                    <span class="template-item-name">{{ template['name'] }}</span>
+                    <span class="template-item-meta">{{ template['category'] }}{% if template['description'] %} · {{ template['description'] }}{% endif %}</span>
+                </span>
+                <span class="template-item-amount">{{ template['amount']|money }}</span>
+                <form action="{{ url_for('template_delete', template_id=template['id']) }}" method="post">
+                    <input type="hidden" name="next" value="{{ url_for('period_settings', _anchor='templates') }}">
+                    <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="small">No templates yet. Add one above to make repeat entries a single click.</p>
+        {% endif %}
+    </article>
+
     <article class="card settings-card span-2 category-settings-card" id="categories">
         <div class="card-head">
             <div>
@@ -65,6 +220,8 @@
                     <label class="field">Budget ({{ currency_info['symbol'] }}, optional)
                         <input type="number" name="budget" min="0" step="0.01" placeholder="No budget"{% if item.budget is not none %} value="{{ item.budget }}"{% endif %}>
                     </label>
+                    <button class="btn btn-ghost btn-sm" type="submit" formaction="{{ url_for('category_move', category_id=item.id, direction='up') }}" title="Move up" aria-label="Move {{ item.name }} up"{% if loop.first %} disabled{% endif %}>↑</button>
+                    <button class="btn btn-ghost btn-sm" type="submit" formaction="{{ url_for('category_move', category_id=item.id, direction='down') }}" title="Move down" aria-label="Move {{ item.name }} down"{% if loop.last %} disabled{% endif %}>↓</button>
                     <button class="btn btn-ghost btn-sm" type="submit">Save</button>
                     <button class="btn btn-danger btn-sm" type="submit" formaction="{{ url_for('category_delete', category_id=item.id) }}" data-confirm="Delete this category?">Delete</button>
                 </div>
@@ -92,7 +249,7 @@
             </label>
             <button class="btn btn-primary" type="submit">Add category</button>
         </form>
-        <p class="small">Budgets apply to each period. Categories with expenses cannot be deleted.</p>
+        <p class="small">Budgets apply to each period. Use the arrows to reorder categories; the order is saved and used everywhere. Categories with expenses, recurring rules, or templates cannot be deleted.</p>
     </article>
 
     {% if is_desktop %}

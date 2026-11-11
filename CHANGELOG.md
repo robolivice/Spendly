@@ -5,6 +5,43 @@ All notable changes to Spendly are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0]
+
+Recurring expenses, an Upcoming review queue, templates, duplicate expenses, and
+category ordering.
+
+### Added
+
+- **Recurring expenses.** Add weekly, monthly, or yearly rules with an amount,
+  category, description, start date, optional end date, and next due date. Due
+  rules appear in a new Upcoming card on the dashboard.
+- **Review queue.** Post, skip, or edit each due occurrence from the dashboard.
+  Edit one occurrence on the spot, or change the whole series in Settings.
+- **Optional auto-post.** Rules post automatically only when explicitly enabled.
+  Review stays the default, and each due date is recorded at most once.
+- **Templates.** Save frequently used entries in Settings and add one to today's
+  expenses with a single click from the dashboard.
+- **Duplicate expenses.** Copy any expense from the dashboard or search results,
+  dated today.
+- **Category ordering.** Move categories up or down in Settings. The order is
+  saved in the existing position column and used throughout the app.
+
+### Changed
+
+- Category deletion is blocked while a category is used by expenses, recurring
+  rules, or templates. Renaming a category also updates recurring rules and
+  templates.
+- Settings now includes recurring rules and templates alongside periods,
+  categories, budgets, currency, and appearance.
+
+### Notes
+
+- Existing databases upgrade automatically and are backed up before migrating
+  to schema version 2. Each upgrade is recorded in `migration.log`.
+- Month-end and leap-year due dates stay anchored to the rule's original date,
+  so dates do not drift. Skipped dates are recorded and never posted later, and
+  deleting a rule keeps expenses that were already posted.
+
 ## [1.3.2]
 
 Fixes release notes appearing as raw Markdown in the update dialog and makes the
@@ -223,6 +260,7 @@ and Windows, shipped with ten complete interface themes.
 - The app keeps startup and pre-import backups, and restores the pre-import
   database if an import fails.
 
+[1.4.0]: https://github.com/robolivice/spendly/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/robolivice/spendly/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/robolivice/spendly/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/robolivice/spendly/compare/v1.2.1...v1.3.0

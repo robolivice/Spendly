@@ -87,6 +87,10 @@
                     <td>{{ e['description'] or '' }}</td>
                     <td class="actions-cell">
                         <div class="row-actions">
+                            <form action="{{ url_for('duplicate_expense', eid=e['id']) }}" method="post">
+                                <input type="hidden" name="next" value="{{ request.full_path }}">
+                                <button type="submit" class="btn btn-ghost btn-sm">Duplicate</button>
+                            </form>
                             <button type="button" class="btn btn-ghost btn-sm edit-expense"
                                     data-edit-expense
                                     data-action="{{ url_for('edit_expense', eid=e['id']) }}"
